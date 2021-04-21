@@ -20,7 +20,7 @@ Citizen.CreateThread(function ()
     AddTextComponentString("Recycle Center")
     EndTextCommandSetBlipName(RecycleBlip)
     while true do
-        Citizen.Wait(7)
+        Citizen.Wait(0)
         local pos = GetEntityCoords(PlayerPedId(), true)
         ---- BUITEN
         if #(pos - vector3(Config['delivery'].outsideLocation.x, Config['delivery'].outsideLocation.y, Config['delivery'].outsideLocation.z)) < 1.3 then
@@ -49,28 +49,23 @@ Citizen.CreateThread(function ()
             end
      
         ---- INKLOKKEN
-        if #(pos - vector3(-1032.27,456.71,6.74)) < 15 and not IsPedInAnyVehicle(PlayerPedId(), false) and carryPackage == nil then
-            DrawMarker(25, 1049.15,-3100.63,-39.95, 0, 0, 0, 0, 0, 0, 1.0, 1.0, 0.5001, 255, 0, 0,100, 0, 0, 0,0)
-            if #(pos - vector3(-1032.27,456.71,6.74)) < 1.3 then
+        if #(pos - vector3(1049.15, -3100.63, -39.95)) < 15 and not IsPedInAnyVehicle(PlayerPedId(), false) and carryPackage == nil then
+            DrawMarker(2, 1049.15, -3100.63, -39.20, 0.9, 0, 0, 0, 0, 0, 0.2001, 0.2001, 0.2001, 255, 255, 255, 255, 0, 0, 0, 0)
+            if #(pos - vector3(1049.15, -3100.63, -39.95)) < 1.3 then
                 if onDuty then
-                    DrawText3D(-1032.27,456.71,6.74 + 1, "~g~E~w~ - Clock Out")
+                    DrawText3D(1049.15, -3100.63, -38.95, "~g~E~w~ - Clock Out")
                 else
-                    DrawText3D(-1032.27,456.71,6.74 + 1, "~g~E~w~ -  Clock In")
+                    DrawText3D(1049.15, -3100.63, -38.95, "~g~E~w~ -  Clock In")
                 end
                 if IsControlJustReleased(0, 38) then
                     onDuty = not onDuty
                     if onDuty then
-                        QBCore.Functions.Notify("You Have Been Clocked In")
+                        QBCore.Functions.Notify("You Have Been Clocked In", "success")
                     else
                         QBCore.Functions.Notify("You Have Clocked Out", "error")
                     end
                 end
             end
-        end
-    
-        if #(pos - vector3(-1025.16,432.95,6.24)) > 30 and onDuty then
-            onDuty = false
-            QBCore.Functions.Notify("You Have Clocked Out", "error")
         end
     end
 end)
