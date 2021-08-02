@@ -23,7 +23,7 @@ AddEventHandler("qb-recycle:server:getItem", function()
     local chance = math.random(1, 100)
     if chance < 7 then
         Player.Functions.AddItem("cryptostick", 1, false)
-        TriggerClientEvent('inventory:client:ItemBox', source, QBCore.Shared.Items["cryptostick"], "add")
+        TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items["cryptostick"], "add")
     end
 
     local Luck = math.random(1, 10)
