@@ -72,7 +72,7 @@ Citizen.CreateThread(function ()
         FreezeEntityPosition(obj, true)
     end
     while true do
-        Citizen.Wait(7)
+        Citizen.Wait(5)
         if onDuty then
             if packagePos ~= nil then
                 local pos = GetEntityCoords(PlayerPedId(), true)
