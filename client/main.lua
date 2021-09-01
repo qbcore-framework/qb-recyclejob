@@ -62,6 +62,8 @@ Citizen.CreateThread(function ()
 end)
 
 local packagePos = nil
+local active = false
+
 Citizen.CreateThread(function ()
     for k, pickuploc in pairs(Config['delivery'].pickupLocations) do
         local model = GetHashKey(Config['delivery'].warehouseObjects[math.random(1, #Config['delivery'].warehouseObjects)])
@@ -78,16 +80,30 @@ Citizen.CreateThread(function ()
                 local pos = GetEntityCoords(PlayerPedId(), true)
                 if carryPackage == nil then
                     if #(pos - vector3(packagePos.x, packagePos.y, packagePos.z)) < 2.3 then
-                        DrawText3D(packagePos.x,packagePos.y,packagePos.z+ 1, "~g~E~w~ - Pack Package")
-                        if IsControlJustReleased(0, 38) then
+			if not active then
+				DrawText3D(packagePos.x,packagePos.y,packagePos.z+ 1, "~g~E~w~ - Pack Package")
+			end
+                        if IsControlJustReleased(0, 38) and not active then
+				active = true
                             QBCore.Functions.Progressbar("pickup_reycle_package", "Pick Up The Package ..", math.random(4000, 6000), false, true, {
                                 disableMovement = true,
                                 disableCarMovement = true,
                                 disableMouse = false,
                                 disableCombat = true,
-                            }, {}, {}, {}, function()
+                            }, {
+                                animDict = "amb@prop_human_bum_bin@base",
+                                anim = "base",
+                                flags = 50,
+                            }, {}, {}, function() -- Done
                                 ClearPedTasks(PlayerPedId())
                                 PickupPackage()
+				active = false
+                                StopAnimTask(PlayerPedId(), "amb@prop_human_bum_bin@base", "base", 1.0)
+                            end, function() -- Cancel
+                                active = false
+                                ClearPedTasks(PlayerPedId())	   
+				StopAnimTask(PlayerPedId(), "amb@prop_human_bum_bin@base", "base", 1.0)
+				QBCore.Functions.Notify("Process cancelled..", "error")														
                             end)
                         end
                     else
