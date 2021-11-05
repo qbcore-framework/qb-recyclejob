@@ -176,7 +176,7 @@ function PickupPackage()
         Citizen.Wait(7)
     end
     TaskPlayAnim(PlayerPedId(), "anim@heists@box_carry@" ,"idle", 5.0, -1, -1, 50, 0, false, false, false)
-    local model = GetHashKey("prop_cs_cardbox_01")
+    local model = `prop_cs_cardbox_01`
     RequestModel(model)
     while not HasModelLoaded(model) do Citizen.Wait(0) end
     local object = CreateObject(model, pos.x, pos.y, pos.z, true, true, true)
