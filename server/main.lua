@@ -8,8 +8,7 @@ local ItemTable = {
     "glass",
 }
 
-RegisterServerEvent("qb-recycle:server:getItem")
-AddEventHandler("qb-recycle:server:getItem", function()
+RegisterNetEvent('qb-recycle:server:getItem', function()
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
     for i = 1, math.random(1, 5), 1 do
@@ -17,7 +16,7 @@ AddEventHandler("qb-recycle:server:getItem", function()
         local amount = math.random(2, 6)
         Player.Functions.AddItem(randItem, amount)
         TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[randItem], 'add')
-        Citizen.Wait(500)
+        Wait(500)
     end
 
     local chance = math.random(1, 100)
