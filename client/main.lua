@@ -1,7 +1,83 @@
+local QBCore = exports['qb-core']:GetCoreObject()
 local carryPackage = nil
+local packagePos = nil
 local onDuty = false
 
-CreateThread(function ()
+-- Functions
+
+local function loadAnimDict(dict)
+    while (not HasAnimDictLoaded(dict)) do
+        RequestAnimDict(dict)
+        Wait(5)
+    end
+end
+
+local function ScrapAnim()
+    local time = 5
+    loadAnimDict("mp_car_bomb")
+    TaskPlayAnim(PlayerPedId(), "mp_car_bomb", "car_bomb_mechanic" ,3.0, 3.0, -1, 16, 0, false, false, false)
+    openingDoor = true
+    CreateThread(function()
+        while openingDoor do
+            TaskPlayAnim(PlayerPedId(), "mp_car_bomb", "car_bomb_mechanic", 3.0, 3.0, -1, 16, 0, 0, 0, 0)
+            Wait(1000)
+            time = time - 1
+            if time <= 0 then
+                openingDoor = false
+                StopAnimTask(PlayerPedId(), "mp_car_bomb", "car_bomb_mechanic", 1.0)
+            end
+        end
+    end)
+end
+
+local function DrawText3D(x, y, z, text)
+	SetTextScale(0.35, 0.35)
+    SetTextFont(4)
+    SetTextProportional(1)
+    SetTextColour(255, 255, 255, 215)
+    SetTextEntry("STRING")
+    SetTextCentre(true)
+    AddTextComponentString(text)
+    SetDrawOrigin(x,y,z, 0)
+    DrawText(0.0, 0.0)
+    local factor = (string.len(text)) / 370
+    DrawRect(0.0, 0.0+0.0125, 0.017+ factor, 0.03, 0, 0, 0, 75)
+    ClearDrawOrigin()
+end
+
+local function GetRandomPackage()
+    local randSeed = math.random(1, #Config["delivery"].pickupLocations)
+    packagePos = {}
+    packagePos.x = Config["delivery"].pickupLocations[randSeed].x
+    packagePos.y = Config["delivery"].pickupLocations[randSeed].y
+    packagePos.z = Config["delivery"].pickupLocations[randSeed].z
+end
+
+local function PickupPackage()
+    local pos = GetEntityCoords(PlayerPedId(), true)
+    RequestAnimDict("anim@heists@box_carry@")
+    while (not HasAnimDictLoaded("anim@heists@box_carry@")) do
+        Wait(7)
+    end
+    TaskPlayAnim(PlayerPedId(), "anim@heists@box_carry@" ,"idle", 5.0, -1, -1, 50, 0, false, false, false)
+    local model = `prop_cs_cardbox_01`
+    RequestModel(model)
+    while not HasModelLoaded(model) do Wait(0) end
+    local object = CreateObject(model, pos.x, pos.y, pos.z, true, true, true)
+    AttachEntityToEntity(object, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.05, 0.1, -0.3, 300.0, 250.0, 20.0, true, true, false, true, 1, true)
+    carryPackage = object
+end
+
+local function DropPackage()
+    ClearPedTasks(PlayerPedId())
+    DetachEntity(carryPackage, true, true)
+    DeleteObject(carryPackage)
+    carryPackage = nil
+end
+
+-- Threads
+
+CreateThread(function()
     local RecycleBlip = AddBlipForCoord(Config['delivery'].outsideLocation.x, Config['delivery'].outsideLocation.y, Config['delivery'].outsideLocation.z)
     SetBlipSprite(RecycleBlip, 365)
     SetBlipColour(RecycleBlip, 2)
@@ -10,7 +86,7 @@ CreateThread(function ()
     BeginTextCommandSetBlipName("STRING")
     AddTextComponentString("Recycle Center")
     EndTextCommandSetBlipName(RecycleBlip)
-	
+
     while true do
         Wait(0)
         local pos = GetEntityCoords(PlayerPedId(), true)
@@ -60,9 +136,7 @@ CreateThread(function ()
     end
 end)
 
-local packagePos = nil
-
-CreateThread(function ()
+CreateThread(function()
     for k, pickuploc in pairs(Config['delivery'].pickupLocations) do
         local model = GetHashKey(Config['delivery'].warehouseObjects[math.random(1, #Config['delivery'].warehouseObjects)])
         RequestModel(model)
@@ -71,7 +145,7 @@ CreateThread(function ()
         PlaceObjectOnGroundProperly(obj)
         FreezeEntityPosition(obj, true)
     end
-	
+
     while true do
         Wait(5)
         if onDuty then
@@ -121,73 +195,3 @@ CreateThread(function ()
         end
     end
 end)
-
-function ScrapAnim()
-    local time = 5
-    loadAnimDict("mp_car_bomb")
-    TaskPlayAnim(PlayerPedId(), "mp_car_bomb", "car_bomb_mechanic" ,3.0, 3.0, -1, 16, 0, false, false, false)
-    openingDoor = true
-    CreateThread(function()
-        while openingDoor do
-            TaskPlayAnim(PlayerPedId(), "mp_car_bomb", "car_bomb_mechanic", 3.0, 3.0, -1, 16, 0, 0, 0, 0)
-            Wait(1000)
-            time = time - 1
-            if time <= 0 then
-                openingDoor = false
-                StopAnimTask(PlayerPedId(), "mp_car_bomb", "car_bomb_mechanic", 1.0)
-            end
-        end
-    end)
-end
-
-function loadAnimDict(dict)
-    while (not HasAnimDictLoaded(dict)) do
-        RequestAnimDict(dict)
-        Wait(5)
-    end
-end
-
-function DrawText3D(x, y, z, text)
-	SetTextScale(0.35, 0.35)
-    SetTextFont(4)
-    SetTextProportional(1)
-    SetTextColour(255, 255, 255, 215)
-    SetTextEntry("STRING")
-    SetTextCentre(true)
-    AddTextComponentString(text)
-    SetDrawOrigin(x,y,z, 0)
-    DrawText(0.0, 0.0)
-    local factor = (string.len(text)) / 370
-    DrawRect(0.0, 0.0+0.0125, 0.017+ factor, 0.03, 0, 0, 0, 75)
-    ClearDrawOrigin()
-end
-
-function GetRandomPackage()
-    local randSeed = math.random(1, #Config["delivery"].pickupLocations)
-    packagePos = {}
-    packagePos.x = Config["delivery"].pickupLocations[randSeed].x
-    packagePos.y = Config["delivery"].pickupLocations[randSeed].y
-    packagePos.z = Config["delivery"].pickupLocations[randSeed].z
-end
-
-function PickupPackage()
-    local pos = GetEntityCoords(PlayerPedId(), true)
-    RequestAnimDict("anim@heists@box_carry@")
-    while (not HasAnimDictLoaded("anim@heists@box_carry@")) do
-        Wait(7)
-    end
-    TaskPlayAnim(PlayerPedId(), "anim@heists@box_carry@" ,"idle", 5.0, -1, -1, 50, 0, false, false, false)
-    local model = `prop_cs_cardbox_01`
-    RequestModel(model)
-    while not HasModelLoaded(model) do Wait(0) end
-    local object = CreateObject(model, pos.x, pos.y, pos.z, true, true, true)
-    AttachEntityToEntity(object, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.05, 0.1, -0.3, 300.0, 250.0, 20.0, true, true, false, true, 1, true)
-    carryPackage = object
-end
-
-function DropPackage()
-    ClearPedTasks(PlayerPedId())
-    DetachEntity(carryPackage, true, true)
-    DeleteObject(carryPackage)
-    carryPackage = nil
-end
