@@ -84,7 +84,7 @@ CreateThread(function()
     SetBlipScale(RecycleBlip, 0.8)
     SetBlipAsShortRange(RecycleBlip, true)
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString("Recycle Center")
+    AddTextComponentString(Lang:t('info.recycle_center'))
     EndTextCommandSetBlipName(RecycleBlip)
 
     while true do
@@ -92,7 +92,7 @@ CreateThread(function()
         local pos = GetEntityCoords(PlayerPedId(), true)
 
         if #(pos - vector3(Config['delivery'].outsideLocation.x, Config['delivery'].outsideLocation.y, Config['delivery'].outsideLocation.z)) < 1.3 then
-            DrawText3D(Config['delivery'].outsideLocation.x, Config['delivery'].outsideLocation.y, Config['delivery'].outsideLocation.z + 1, "~g~E~w~ - To Enter")
+            DrawText3D(Config['delivery'].outsideLocation.x, Config['delivery'].outsideLocation.y, Config['delivery'].outsideLocation.z + 1, Lang:t('info.enter_recycle'))
             if IsControlJustReleased(0, 38) then
                 DoScreenFadeOut(500)
                 while not IsScreenFadedOut() do
@@ -104,7 +104,7 @@ CreateThread(function()
         end
 
 		if #(pos - vector3(Config['delivery'].insideLocation.x, Config['delivery'].insideLocation.y, Config['delivery'].insideLocation.z)) < 1.3 then
-			DrawText3D(Config['delivery'].insideLocation.x, Config['delivery'].insideLocation.y, Config['delivery'].insideLocation.z + 1, "~g~E~w~ - To Go Outside")
+			DrawText3D(Config['delivery'].insideLocation.x, Config['delivery'].insideLocation.y, Config['delivery'].insideLocation.z + 1, Lang:t('info.exit_recycle'))
 			if IsControlJustReleased(0, 38) then
 				DoScreenFadeOut(500)
 				while not IsScreenFadedOut() do
@@ -119,16 +119,16 @@ CreateThread(function()
             DrawMarker(2, 1049.15, -3100.63, -39.20, 0.9, 0, 0, 0, 0, 0, 0.2001, 0.2001, 0.2001, 255, 255, 255, 255, 0, 0, 0, 0)
             if #(pos - vector3(1049.15, -3100.63, -39.95)) < 1.3 then
                 if onDuty then
-                    DrawText3D(1049.15, -3100.63, -38.95, "~g~E~w~ - Clock Out")
+                    DrawText3D(1049.15, -3100.63, -38.95, Lang:t('info.clock_out'))
                 else
-                    DrawText3D(1049.15, -3100.63, -38.95, "~g~E~w~ -  Clock In")
+                    DrawText3D(1049.15, -3100.63, -38.95, Lang:t('info.clock_in'))
                 end
                 if IsControlJustReleased(0, 38) then
                     onDuty = not onDuty
                     if onDuty then
-                        QBCore.Functions.Notify("You Have Been Clocked In", "success")
+                        QBCore.Functions.Notify(Lang:t('success.clocked_in'), "success")
                     else
-                        QBCore.Functions.Notify("You Have Clocked Out", "error")
+                        QBCore.Functions.Notify(Lang:t('error.clocked_out'), "error")
                     end
                 end
             end
@@ -153,28 +153,30 @@ CreateThread(function()
                 local pos = GetEntityCoords(PlayerPedId(), true)
                 if carryPackage == nil then
                     if #(pos - vector3(packagePos.x, packagePos.y, packagePos.z)) < 2.3 then
-                        DrawText3D(packagePos.x,packagePos.y,packagePos.z+ 1, "~g~E~w~ - Pack Package")
+                        DrawText3D(packagePos.x,packagePos.y,packagePos.z+ 1, Lang:t('info.pack_package'))
                         if IsControlJustReleased(0, 38) then
-                            QBCore.Functions.Progressbar("pickup_reycle_package", "Pick Up The Package ..", math.random(4000, 6000), false, true, {
+                            QBCore.Functions.Progressbar("pickup_reycle_package", Lang:t('progress.picking_package'), math.random(4000, 6000), false, true, {
                                 disableMovement = true,
                                 disableCarMovement = true,
                                 disableMouse = false,
                                 disableCombat = true,
-                            }, {}, {}, {}, function()
+                            }, {}, {}, {}, function() -- Done
                                 ClearPedTasks(PlayerPedId())
                                 PickupPackage()
+                            end, function() -- Canceled
+                                ClearPedTasks(PlayerPedId())
                             end)
                         end
                     else
-                        DrawText3D(packagePos.x, packagePos.y, packagePos.z + 1, "Package")
+                        DrawText3D(packagePos.x, packagePos.y, packagePos.z + 1, Lang:t('info.package'))
                     end
                 else
                     if #(pos - vector3(Config['delivery'].dropLocation.x, Config['delivery'].dropLocation.y, Config['delivery'].dropLocation.z)) < 2.0 then
-                        DrawText3D(Config['delivery'].dropLocation.x, Config['delivery'].dropLocation.y, Config['delivery'].dropLocation.z, "~g~E~w~ - Hand In The Package")
+                        DrawText3D(Config['delivery'].dropLocation.x, Config['delivery'].dropLocation.y, Config['delivery'].dropLocation.z, Lang:t('info.hand_in_package_3d'))
                         if IsControlJustReleased(0, 38) then
                             DropPackage()
                             ScrapAnim()
-                            QBCore.Functions.Progressbar("deliver_reycle_package", "Unpacking The Package", 5000, false, true, {
+                            QBCore.Functions.Progressbar("deliver_reycle_package", Lang:t('progress.unpack_package'), 5000, false, true, {
                                 disableMovement = true,
                                 disableCarMovement = true,
                                 disableMouse = false,
@@ -186,7 +188,7 @@ CreateThread(function()
                             end)
                         end
                     else
-                        DrawText3D(Config['delivery'].dropLocation.x, Config['delivery'].dropLocation.y, Config['delivery'].dropLocation.z, "Hand In")
+                        DrawText3D(Config['delivery'].dropLocation.x, Config['delivery'].dropLocation.y, Config['delivery'].dropLocation.z, Lang:t('info.hand_in'))
                     end
                 end
             else
