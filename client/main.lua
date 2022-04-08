@@ -368,7 +368,7 @@ RegisterNetEvent(
       function()
         ClearPedTasks(PlayerPedId())
         PickupPackage()
-        pickupZone:destroy()
+        pickupZonedestroy()
         pickupZone = nil
         packageCoords = nil
       end
