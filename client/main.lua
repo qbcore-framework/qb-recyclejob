@@ -2,7 +2,6 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local carryPackage = nil
 local packageCoords = nil
 local onDuty = false
-local isInside = false
 
 -- zone check
 
@@ -28,125 +27,261 @@ local pickupZone = nil
 
 -- Functions
 
+local function DestroyPickupTarget()
+  if not pickupZone then
+    return
+  end
+  
+  if Config.UseTarget then
+    exports['qb-target']:RemoveZone(pickupTargetID)
+    pickupZone = nil
+  else
+    pickupZone:destroy()
+    pickupZone = nil
+    isInsidePickupZone = false
+  end
+end
+
 local function RegisterEntranceTarget()
-  entranceZone = BoxZone:Create(vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z), 1, 4, {
+  local coords = vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z)
+
+  if Config.UseTarget then
+    entranceZone = exports['qb-target']:AddBoxZone(entranceTargetID, coords, 1, 4, {
       name = entranceTargetID,
       heading = 44.0,
       minZ = Config.OutsideLocation.z - 1.0,
       maxZ = Config.OutsideLocation.z + 2.0,
-      debugPoly = true
-    }
-  )
+      debugPoly = false,
+    }, {
+      options = {
+        {
+          type = 'client',
+          event = 'qb-recyclejob:client:target:enterLocation',
+          label = 'Enter Warehouse',
+        },
+      },
+      distance = 1.0
+    })
+  else
+    entranceZone = BoxZone:Create(coords, 1, 4, {
+      name = entranceTargetID,
+      heading = 44.0,
+      minZ = Config.OutsideLocation.z - 1.0,
+      maxZ = Config.OutsideLocation.z + 2.0,
+      debugPoly = false
+    })
 
-  entranceZone:onPlayerInOut(
-    function(isPointInside)
-      if isPointInside then
-        exports['qb-core']:DrawText('[E] Enter Warehouse', 'left')
-      else
-        exports['qb-core']:HideText()
+    entranceZone:onPlayerInOut(
+      function(isPointInside)
+        if isPointInside then
+          exports['qb-core']:DrawText('[E] Enter Warehouse', 'left')
+        else
+          exports['qb-core']:HideText()
+        end
+
+        isInsideEntranceZone = isPointInside
       end
-
-      isInsideEntranceZone = isPointInside
-    end
-  )
+    )
+  end
 end
 
 local function RegisterExitTarget()
-  exitZone = BoxZone:Create(vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z), 1, 4, {
+  local coords = vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z)
+    
+  if Config.UseTarget then
+    exitZone = exports['qb-target']:AddBoxZone(exitTargetID, coords, 1, 4, {
       name = exitTargetID,
       heading = 270,
       minZ = Config.InsideLocation.z - 1.0,
       maxZ = Config.InsideLocation.z + 2.0,
-      debugPoly = true
-    }
-  )
+      debugPoly = false,
+    }, {
+      options = {
+        {
+          type = 'client',
+          event = 'qb-recyclejob:client:target:exitLocation',
+          label = 'Exit Warehouse',
+        },
+      },
+      distance = 1.0
+    })
+  else
+    exitZone = BoxZone:Create(coords, 1, 4, {
+      name = exitTargetID,
+      heading = 270,
+      minZ = Config.InsideLocation.z - 1.0,
+      maxZ = Config.InsideLocation.z + 2.0,
+      debugPoly = false
+    })
 
-  exitZone:onPlayerInOut(
-    function(isPointInside)
-      if isPointInside then
-        exports['qb-core']:DrawText('[E] Exit Warehouse', 'left')
-      else
-        exports['qb-core']:HideText()
+    exitZone:onPlayerInOut(
+      function(isPointInside)
+        if isPointInside then
+          exports['qb-core']:DrawText('[E] Exit Warehouse', 'left')
+        else
+          exports['qb-core']:HideText()
+        end
+
+        isInsideExitZone = isPointInside
       end
+    )
+  end
+end
 
-      isInsideExitZone = isPointInside
-    end
-  )
+local function DestroyExitTarget()
+  if not exitZone then
+    return
+  end
+
+  if Config.UseTarget then
+    exports['qb-target']:RemoveZone(exitTargetID)
+    exitZone = nil
+  else
+    exitZone:destroy()
+    exitZone = nil
+    isInsideExitZone = false
+  end
+end
+
+local function GetDutyTargetText()
+  local text = nil
+  if onDuty then
+    text = '[E] Clock Out'
+  else
+    text = '[E] Clock In'
+  end
+
+  return text
 end
 
 local function RegisterDutyTarget()
-  dutyZone = BoxZone:Create(vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z), 1, 1, {
+  local coords = vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z)
+  
+  if Config.UseTarget then
+    dutyZone = exports['qb-target']:AddBoxZone(dutyTargetID, coords, 1, 1, {
       name = dutyTargetID,
       heading = 270,
       minZ = Config.DutyLocation.z - 2.0,
       maxZ = Config.DutyLocation.z + 1.0,
-      debugPoly = true
-    }
-  )
-
-  dutyZone:onPlayerInOut(
-    function(isPointInside)
-      local text = nil
-      if onDuty then
-        text = '[E] Clock Out'
-      else
-        text = '[E] Clock In'
+      debugPoly = false,
+    }, {
+      options = {
+        {
+          type = 'client',
+          event = 'qb-recyclejob:client:target:toggleDuty',
+          label = GetDutyTargetText(),
+        },
+      },
+      distance = 1.0
+    })
+  else
+    dutyZone = BoxZone:Create(coords, 1, 1, {
+      name = dutyTargetID,
+      heading = 270,
+      minZ = Config.DutyLocation.z - 2.0,
+      maxZ = Config.DutyLocation.z + 1.0,
+      debugPoly = false
+    })
+  
+    dutyZone:onPlayerInOut(
+      function(isPointInside)
+        if isPointInside then
+          exports['qb-core']:DrawText(GetDutyTargetText(), 'left')
+        else
+          exports['qb-core']:HideText()
+        end
+  
+        isInsideDutyZone = isPointInside
       end
-
-      if isPointInside then
-        exports['qb-core']:DrawText(text, 'left')
-      else
-        exports['qb-core']:HideText()
-      end
-
-      isInsideDutyZone = isPointInside
-    end
-  )
+    )
+  end
 end
 
+
+local function DestroyDutyTarget()
+  if not dutyZone then
+    return
+  end
+
+  if Config.UseTarget then
+    exports['qb-target']:RemoveZone(dutyTargetID)
+    dutyZone = nil
+  else
+    dutyZone:destroy()
+    dutyZone = nil
+    isInsideDutyZone = false
+  end
+end
+
+local function RefreshDutyTarget()
+  DestroyDutyTarget()
+  RegisterDutyTarget()
+end
+
+
 local function RegisterDeliveyTarget()
-  deliveryZone = BoxZone:Create(vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z), 1, 1, {
+  local coords = vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z)
+
+  if Config.UseTarget then
+    deliveryZone = exports['qb-target']:AddBoxZone(deliveryTargetID, coords, 1, 1, {
       name = deliveryTargetID,
       heading = 270,
       minZ = Config.DropLocation.z - 2.0,
       maxZ = Config.DropLocation.z + 1.0,
-      debugPoly = true
-    }
-  )
-
-  deliveryZone:onPlayerInOut(
-    function(isPointInside)
-      if isPointInside and carryPackage then
-        exports['qb-core']:DrawText('[E] Hand In Package', 'left')
-      else
-        exports['qb-core']:HideText()
+      debugPoly = false,
+    }, {
+      options = {
+        {
+          type = 'client',
+          event = 'qb-recyclejob:client:target:dropPackage',
+          label = 'Hand In Package',
+        },
+      },
+      distance = 1.0
+    })
+  else
+    deliveryZone = BoxZone:Create(coords, 1, 1, {
+      name = deliveryTargetID,
+      heading = 270,
+      minZ = Config.DropLocation.z - 2.0,
+      maxZ = Config.DropLocation.z + 1.0,
+      debugPoly = false
+    })
+  
+    deliveryZone:onPlayerInOut(
+      function(isPointInside)
+        if isPointInside and carryPackage then
+          exports['qb-core']:DrawText('[E] Hand In Package', 'left')
+        else
+          exports['qb-core']:HideText()
+        end
+  
+        isInsideDeliveryZone = isPointInside
       end
+    )
+  end
+end
 
-      isInsideDeliveryZone = isPointInside
-    end
-  )
+local function DestroyDeliveryTarget()
+  if not deliveryZone then
+    return
+  end
+
+  if Config.UseTarget then
+    exports['qb-target']:RemoveZone(deliveryTargetID)
+    deliveryZone = nil
+  else
+    deliveryZone:destroy()
+    deliveryZone = nil
+    isInsideDeliveryZone = false
+  end
 end
 
 local function DestoryInsideZones()
-  if pickupZone then
-    pickupZone:destroy()
-    pickupZone = nil
-  end
-
-  if exitZone then
-    exitZone:destroy()
-    exitZone = nil
-  end
-
-  if dutyZone then
-    dutyZone:destroy()
-    dutyZone = nil
-  end
-
-  if deliveryZone then
-    deliveryZone:destroy()
-    deliveryZone = nil
-  end
+  DestroyPickupTarget()
+  DestroyExitTarget()
+  DestroyDutyTarget()
+  DestroyDeliveryTarget()
 end
 
 local function loadAnimDict(dict)
@@ -237,7 +372,6 @@ local function EnterLocation()
   buildInteriorDesign()
   DoScreenFadeIn(500)
 
-  isInside = true
   isInsidePickupZone = false
   isInsideExitZone = false
   isInsideDutyZone = false
@@ -246,7 +380,6 @@ local function EnterLocation()
   DestoryInsideZones()
   RegisterExitTarget()
   RegisterDutyTarget()
-  RegisterDeliveyTarget()
 end
 
 local function ExitLocation()
@@ -257,7 +390,6 @@ local function ExitLocation()
   SetEntityCoords(PlayerPedId(), Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z + 1)
   DoScreenFadeIn(500)
 
-  isInside = false
   onDuty = false
   isInsidePickupZone = false
   isInsideExitZone = false
@@ -272,16 +404,35 @@ local function ExitLocation()
 end
 
 function RegisterPickupTarget(coords)
-  pickupZone = BoxZone:Create(vector3(coords.x, coords.y, coords.z), 4, 1.5, {
+  local targetCoords = vector3(coords.x, coords.y, coords.z)
+
+  if Config.UseTarget then
+    pickupZone = exports['qb-target']:AddBoxZone(pickupTargetID, targetCoords, 4, 1.5, {
       name = pickupTargetID,
       heading = coords.h,
       minZ = coords.z - 1.0,
       maxZ = coords.z + 2.0,
-      debugPoly = true
-    }
-  )
+      debugPoly = false,
+    }, {
+      options = {
+        {
+          type = 'client',
+          event = 'qb-recyclejob:client:target:pickupPackage',
+          label = 'Get Package',
+        },
+      },
+      distance = 1.0
+    })
+  else
+    pickupZone = BoxZone:Create(targetCoords, 4, 1.5, {
+      name = pickupTargetID,
+      heading = coords.h,
+      minZ = coords.z - 1.0,
+      maxZ = coords.z + 2.0,
+      debugPoly = false
+    })
 
-  pickupZone:onPlayerInOut(
+    pickupZone:onPlayerInOut(
     function(isPointInside)
       if isPointInside then
         exports['qb-core']:DrawText('[E] Get Package', 'left')
@@ -292,6 +443,15 @@ function RegisterPickupTarget(coords)
       isInsidePickupZone = isPointInside
     end
   )
+  end
+end
+
+local function DrawPackageLocationBlip()
+  if not Config.DrawPackageLocationBlip then
+    return
+  end
+
+  DrawMarker(2, packageCoords.x, packageCoords.y, packageCoords.z + 3, 0, 0, 0, 180.0, 0, 0, 0.5, 0.5, 0.5, 255, 255, 0, 100, false, false, 2, true, nil, nil, false)
 end
 
 -- Events
@@ -313,30 +473,35 @@ RegisterNetEvent('qb-recyclejob:client:target:toggleDuty',
     onDuty = not onDuty
     if onDuty then
       QBCore.Functions.Notify('You Have Been Clocked In', 'success')
+      GetRandomPackage()
     else
       QBCore.Functions.Notify('You Have Clocked Out', 'error')
-      if pickupZone then
-        pickupZone:destroy()
-        pickupZone = nil
-        packageCoords = nil
-      end
-      if carryPackage then
-        DropPackage()
-      end
+      DestroyPickupTarget()
     end
+
+    if carryPackage then
+      DropPackage()
+    end
+
+    RefreshDutyTarget()
+    DestroyDeliveryTarget()
   end
 )
 
 RegisterNetEvent('qb-recyclejob:client:target:pickupPackage',
   function()
-    if not pickupZone or not isInsidePickupZone then
+    if not pickupZone or carryPackage then
+      return
+    end
+
+    if not Config.UseTarget and not isInsidePickupZone then
       return
     end
 
     QBCore.Functions.Progressbar(
       'pickup_reycle_package',
-      'Pick Up The Package ..',
-      math.random(4000, 6000),
+      'Picking up the package',
+      Config.PickupActionDuration,
       false,
       true,
       {
@@ -349,11 +514,11 @@ RegisterNetEvent('qb-recyclejob:client:target:pickupPackage',
       {},
       {},
       function()
+        packageCoords = nil
         ClearPedTasks(PlayerPedId())
         PickupPackage()
-        pickupZone:destroy()
-        pickupZone = nil
-        packageCoords = nil
+        DestroyPickupTarget()
+        RegisterDeliveyTarget()
       end
     )
   end
@@ -361,16 +526,21 @@ RegisterNetEvent('qb-recyclejob:client:target:pickupPackage',
 
 RegisterNetEvent('qb-recyclejob:client:target:dropPackage',
   function()
-    if not carryPackage or not isInsideDeliveryZone or not deliveryZone then
+    if not carryPackage or not deliveryZone then
+      return
+    end
+
+    if not Config.UseTarget and not isInsideDeliveryZone then
       return
     end
 
     DropPackage()
     ScrapAnim()
+    DestroyDeliveryTarget()
     QBCore.Functions.Progressbar(
       'deliver_reycle_package',
-      'Unpacking The Package',
-      5000,
+      'Unpacking the package',
+      Config.DeliveryActionDuration,
       false,
       true,
       {
@@ -386,6 +556,7 @@ RegisterNetEvent('qb-recyclejob:client:target:dropPackage',
         -- Done
         StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
         TriggerServerEvent('qb-recycle:server:getItem')
+        GetRandomPackage()
       end
     )
   end
@@ -405,9 +576,25 @@ CreateThread(
     SetLocationBlip()
     RegisterEntranceTarget()
 
-    while true do
-      sleep = 500
-      if not isInside then
+    if Config.UseTarget then
+      if not Config.DrawPackageLocationBlip then
+        return
+      end
+
+      while true do
+        sleep = 500
+
+        if onDuty and packageCoords and not carryPackage then
+          sleep = 0
+          DrawPackageLocationBlip()
+        end
+
+        Wait(sleep)
+      end
+    else
+      while true do
+        sleep = 500
+       
         if isInsideEntranceZone then
           sleep = 0
           if IsControlJustReleased(0, 38) then
@@ -415,7 +602,7 @@ CreateThread(
             exports['qb-core']:HideText()
           end
         end
-      else
+       
         if isInsideExitZone then
           sleep = 0
           if IsControlJustReleased(0, 38) then
@@ -433,32 +620,28 @@ CreateThread(
         end
 
         if onDuty then
-          if not pickupZone and not carryPackage then
-            GetRandomPackage()
-          else
-            if isInsidePickupZone and not carryPackage then
-              sleep = 0
-              if IsControlJustReleased(0, 38) then
-                TriggerEvent('qb-recyclejob:client:target:pickupPackage')
-                exports['qb-core']:HideText()
-              end
-            elseif packageCoords and not carryPackage then
-              sleep = 0
-              DrawMarker(2, packageCoords.x, packageCoords.y, packageCoords.z + 3, 0, 0, 0, 180.0, 0, 0, 0.5, 0.5, 0.5, 255, 255, 0, 100, false, false, 2, true, nil, nil, false)
+          if isInsidePickupZone and not carryPackage then
+            sleep = 0
+            if IsControlJustReleased(0, 38) then
+              TriggerEvent('qb-recyclejob:client:target:pickupPackage')
+              exports['qb-core']:HideText()
             end
+          elseif packageCoords and not carryPackage then
+            sleep = 0
+            DrawPackageLocationBlip()
+          end
 
-            if isInsideDeliveryZone and carryPackage then
-              sleep = 0
-              if IsControlJustReleased(0, 38) then
-                TriggerEvent('qb-recyclejob:client:target:dropPackage')
-                exports['qb-core']:HideText()
-              end
+          if isInsideDeliveryZone and carryPackage then
+            sleep = 0
+            if IsControlJustReleased(0, 38) then
+              TriggerEvent('qb-recyclejob:client:target:dropPackage')
+              exports['qb-core']:HideText()
             end
           end
         end
+       
+        Wait(sleep)
       end
-
-      Wait(sleep)
     end
   end
 )
