@@ -29,17 +29,12 @@ local pickupZone = nil
 -- Functions
 
 local function RegisterEntranceTarget()
-  entranceZone =
-    BoxZone:Create(
-    vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z),
-    1,
-    4,
-    {
+  entranceZone = BoxZone:Create(vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z), 1, 4, {
       name = entranceTargetID,
       heading = 44.0,
       minZ = Config.OutsideLocation.z - 1.0,
       maxZ = Config.OutsideLocation.z + 2.0,
-      debugPoly = false
+      debugPoly = true
     }
   )
 
@@ -57,17 +52,12 @@ local function RegisterEntranceTarget()
 end
 
 local function RegisterExitTarget()
-  exitZone =
-    BoxZone:Create(
-    vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z),
-    1,
-    4,
-    {
+  exitZone = BoxZone:Create(vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z), 1, 4, {
       name = exitTargetID,
       heading = 270,
       minZ = Config.InsideLocation.z - 1.0,
       maxZ = Config.InsideLocation.z + 2.0,
-      debugPoly = false
+      debugPoly = true
     }
   )
 
@@ -85,17 +75,12 @@ local function RegisterExitTarget()
 end
 
 local function RegisterDutyTarget()
-  dutyZone =
-    BoxZone:Create(
-    vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z),
-    1,
-    1,
-    {
+  dutyZone = BoxZone:Create(vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z), 1, 1, {
       name = dutyTargetID,
       heading = 270,
       minZ = Config.DutyLocation.z - 2.0,
       maxZ = Config.DutyLocation.z + 1.0,
-      debugPoly = false
+      debugPoly = true
     }
   )
 
@@ -120,17 +105,12 @@ local function RegisterDutyTarget()
 end
 
 local function RegisterDeliveyTarget()
-  deliveryZone =
-    BoxZone:Create(
-    vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z),
-    1,
-    1,
-    {
+  deliveryZone = BoxZone:Create(vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z), 1, 1, {
       name = deliveryTargetID,
       heading = 270,
       minZ = Config.DropLocation.z - 2.0,
       maxZ = Config.DropLocation.z + 1.0,
-      debugPoly = false
+      debugPoly = true
     }
   )
 
@@ -161,6 +141,11 @@ local function DestoryInsideZones()
   if dutyZone then
     dutyZone:destroy()
     dutyZone = nil
+  end
+
+  if deliveryZone then
+    deliveryZone:destroy()
+    deliveryZone = nil
   end
 end
 
@@ -287,17 +272,12 @@ local function ExitLocation()
 end
 
 function RegisterPickupTarget(coords)
-  pickupZone =
-    BoxZone:Create(
-    vector3(coords.x, coords.y, coords.z),
-    4,
-    1.5,
-    {
+  pickupZone = BoxZone:Create(vector3(coords.x, coords.y, coords.z), 4, 1.5, {
       name = pickupTargetID,
       heading = coords.h,
       minZ = coords.z - 1.0,
       maxZ = coords.z + 2.0,
-      debugPoly = false
+      debugPoly = true
     }
   )
 
@@ -316,22 +296,19 @@ end
 
 -- Events
 
-RegisterNetEvent(
-  'qb-recyclejob:client:target:enterLocation',
+RegisterNetEvent('qb-recyclejob:client:target:enterLocation',
   function()
     EnterLocation()
   end
 )
 
-RegisterNetEvent(
-  'qb-recyclejob:client:target:exitLocation',
+RegisterNetEvent('qb-recyclejob:client:target:exitLocation',
   function()
     ExitLocation()
   end
 )
 
-RegisterNetEvent(
-  'qb-recyclejob:client:target:toggleDuty',
+RegisterNetEvent('qb-recyclejob:client:target:toggleDuty',
   function()
     onDuty = not onDuty
     if onDuty then
@@ -343,13 +320,19 @@ RegisterNetEvent(
         pickupZone = nil
         packageCoords = nil
       end
+      if carryPackage then
+        DropPackage()
+      end
     end
   end
 )
 
-RegisterNetEvent(
-  'qb-recyclejob:client:target:pickupPackage',
+RegisterNetEvent('qb-recyclejob:client:target:pickupPackage',
   function()
+    if not pickupZone or not isInsidePickupZone then
+      return
+    end
+
     QBCore.Functions.Progressbar(
       'pickup_reycle_package',
       'Pick Up The Package ..',
@@ -376,9 +359,12 @@ RegisterNetEvent(
   end
 )
 
-RegisterNetEvent(
-  'qb-recyclejob:client:target:dropPackage',
+RegisterNetEvent('qb-recyclejob:client:target:dropPackage',
   function()
+    if not carryPackage or not isInsideDeliveryZone or not deliveryZone then
+      return
+    end
+
     DropPackage()
     ScrapAnim()
     QBCore.Functions.Progressbar(
