@@ -71,17 +71,15 @@ local function RegisterEntranceTarget()
       debugPoly = false
     })
 
-    entranceZone:onPlayerInOut(
-      function(isPointInside)
-        if isPointInside then
-          exports['qb-core']:DrawText('[E] Enter Warehouse', 'left')
-        else
-          exports['qb-core']:HideText()
-        end
-
-        isInsideEntranceZone = isPointInside
+    entranceZone:onPlayerInOut(function(isPointInside)
+      if isPointInside then
+        exports['qb-core']:DrawText('[E] Enter Warehouse', 'left')
+      else
+        exports['qb-core']:HideText()
       end
-    )
+
+      isInsideEntranceZone = isPointInside
+    end)
   end
 end
 
@@ -114,17 +112,15 @@ local function RegisterExitTarget()
       debugPoly = false
     })
 
-    exitZone:onPlayerInOut(
-      function(isPointInside)
-        if isPointInside then
-          exports['qb-core']:DrawText('[E] Exit Warehouse', 'left')
-        else
-          exports['qb-core']:HideText()
-        end
-
-        isInsideExitZone = isPointInside
+    exitZone:onPlayerInOut(function(isPointInside)
+      if isPointInside then
+        exports['qb-core']:DrawText('[E] Exit Warehouse', 'left')
+      else
+        exports['qb-core']:HideText()
       end
-    )
+
+      isInsideExitZone = isPointInside
+    end)
   end
 end
 
@@ -183,20 +179,17 @@ local function RegisterDutyTarget()
       debugPoly = false
     })
   
-    dutyZone:onPlayerInOut(
-      function(isPointInside)
-        if isPointInside then
-          exports['qb-core']:DrawText(GetDutyTargetText(), 'left')
-        else
-          exports['qb-core']:HideText()
-        end
-  
-        isInsideDutyZone = isPointInside
+    dutyZone:onPlayerInOut(function(isPointInside)
+      if isPointInside then
+        exports['qb-core']:DrawText(GetDutyTargetText(), 'left')
+      else
+        exports['qb-core']:HideText()
       end
-    )
+
+      isInsideDutyZone = isPointInside
+    end)
   end
 end
-
 
 local function DestroyDutyTarget()
   if not dutyZone then
@@ -248,17 +241,15 @@ local function RegisterDeliveyTarget()
       debugPoly = false
     })
   
-    deliveryZone:onPlayerInOut(
-      function(isPointInside)
-        if isPointInside and carryPackage then
-          exports['qb-core']:DrawText('[E] Hand In Package', 'left')
-        else
-          exports['qb-core']:HideText()
-        end
-  
-        isInsideDeliveryZone = isPointInside
+    deliveryZone:onPlayerInOut(function(isPointInside)
+      if isPointInside and carryPackage then
+        exports['qb-core']:DrawText('[E] Hand In Package', 'left')
+      else
+        exports['qb-core']:HideText()
       end
-    )
+
+      isInsideDeliveryZone = isPointInside
+    end)
   end
 end
 
@@ -296,19 +287,18 @@ local function ScrapAnim()
   loadAnimDict('mp_car_bomb')
   TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, false, false, false)
   local openingDoor = true
-  CreateThread(
-    function()
-      while openingDoor do
-        TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, 0, 0, 0)
-        Wait(1000)
-        time = time - 1
-        if time <= 0 then
-          openingDoor = false
-          StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
-        end
+  
+  CreateThread(function()
+    while openingDoor do
+      TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, 0, 0, 0)
+      Wait(1000)
+      time = time - 1
+      if time <= 0 then
+        openingDoor = false
+        StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
       end
     end
-  )
+  end)
 end
 
 local function GetRandomPackage()
@@ -432,8 +422,7 @@ function RegisterPickupTarget(coords)
       debugPoly = false
     })
 
-    pickupZone:onPlayerInOut(
-    function(isPointInside)
+    pickupZone:onPlayerInOut(function(isPointInside)
       if isPointInside then
         exports['qb-core']:DrawText('[E] Get Package', 'left')
       else
@@ -441,8 +430,7 @@ function RegisterPickupTarget(coords)
       end
 
       isInsidePickupZone = isPointInside
-    end
-  )
+    end)
   end
 end
 
@@ -456,192 +444,168 @@ end
 
 -- Events
 
-RegisterNetEvent('qb-recyclejob:client:target:enterLocation',
-  function()
-    EnterLocation()
+RegisterNetEvent('qb-recyclejob:client:target:enterLocation', function()
+  EnterLocation()
+end)
+
+RegisterNetEvent('qb-recyclejob:client:target:exitLocation', function()
+  ExitLocation()
+end)
+
+RegisterNetEvent('qb-recyclejob:client:target:toggleDuty', function()
+  onDuty = not onDuty
+  if onDuty then
+    QBCore.Functions.Notify('You Have Been Clocked In', 'success')
+    GetRandomPackage()
+  else
+    QBCore.Functions.Notify('You Have Clocked Out', 'error')
+    DestroyPickupTarget()
   end
-)
 
-RegisterNetEvent('qb-recyclejob:client:target:exitLocation',
-  function()
-    ExitLocation()
-  end
-)
-
-RegisterNetEvent('qb-recyclejob:client:target:toggleDuty',
-  function()
-    onDuty = not onDuty
-    if onDuty then
-      QBCore.Functions.Notify('You Have Been Clocked In', 'success')
-      GetRandomPackage()
-    else
-      QBCore.Functions.Notify('You Have Clocked Out', 'error')
-      DestroyPickupTarget()
-    end
-
-    if carryPackage then
-      DropPackage()
-    end
-
-    RefreshDutyTarget()
-    DestroyDeliveryTarget()
-  end
-)
-
-RegisterNetEvent('qb-recyclejob:client:target:pickupPackage',
-  function()
-    if not pickupZone or carryPackage then
-      return
-    end
-
-    if not Config.UseTarget and not isInsidePickupZone then
-      return
-    end
-
-    QBCore.Functions.Progressbar(
-      'pickup_reycle_package',
-      'Picking up the package',
-      Config.PickupActionDuration,
-      false,
-      true,
-      {
-        disableMovement = true,
-        disableCarMovement = true,
-        disableMouse = false,
-        disableCombat = true
-      },
-      {},
-      {},
-      {},
-      function()
-        packageCoords = nil
-        ClearPedTasks(PlayerPedId())
-        PickupPackage()
-        DestroyPickupTarget()
-        RegisterDeliveyTarget()
-      end
-    )
-  end
-)
-
-RegisterNetEvent('qb-recyclejob:client:target:dropPackage',
-  function()
-    if not carryPackage or not deliveryZone then
-      return
-    end
-
-    if not Config.UseTarget and not isInsideDeliveryZone then
-      return
-    end
-
+  if carryPackage then
     DropPackage()
-    ScrapAnim()
-    DestroyDeliveryTarget()
-    QBCore.Functions.Progressbar(
-      'deliver_reycle_package',
-      'Unpacking the package',
-      Config.DeliveryActionDuration,
-      false,
-      true,
-      {
-        disableMovement = true,
-        disableCarMovement = true,
-        disableMouse = false,
-        disableCombat = true
-      },
-      {},
-      {},
-      {},
-      function()
-        -- Done
-        StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
-        TriggerServerEvent('qb-recycle:server:getItem')
-        GetRandomPackage()
-      end
-    )
   end
-)
+
+  RefreshDutyTarget()
+  DestroyDeliveryTarget()
+end)
+
+RegisterNetEvent('qb-recyclejob:client:target:pickupPackage', function()
+  if not pickupZone or carryPackage then
+    return
+  end
+
+  if not Config.UseTarget and not isInsidePickupZone then
+    return
+  end
+
+  QBCore.Functions.Progressbar('pickup_reycle_package', 'Picking up the package', Config.PickupActionDuration, false, true, {
+      disableMovement = true,
+      disableCarMovement = true,
+      disableMouse = false,
+      disableCombat = true
+    }, {}, {}, {}, function()
+      packageCoords = nil
+      ClearPedTasks(PlayerPedId())
+      PickupPackage()
+      DestroyPickupTarget()
+      RegisterDeliveyTarget()
+    end)
+end)
+
+RegisterNetEvent('qb-recyclejob:client:target:dropPackage', function()
+  if not carryPackage or not deliveryZone then
+    return
+  end
+
+  if not Config.UseTarget and not isInsideDeliveryZone then
+    return
+  end
+
+  DropPackage()
+  ScrapAnim()
+  DestroyDeliveryTarget()
+  QBCore.Functions.Progressbar('deliver_reycle_package', 'Unpacking the package', Config.DeliveryActionDuration, false, true, {
+      disableMovement = true,
+      disableCarMovement = true,
+      disableMouse = false,
+      disableCombat = true
+    }, {}, {}, {}, function()
+      -- Done
+      StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
+      TriggerServerEvent('qb-recycle:server:getItem')
+      GetRandomPackage()
+  end)
+end)
 
 -- Threads
 
-CreateThread(
-  function()
-    local sleep = 500
+CreateThread(function()
+  local sleep = 500
 
-    while not LocalPlayer.state.isLoggedIn do
-      -- do nothing
-      Wait(sleep)
+  while not LocalPlayer.state.isLoggedIn do
+    -- do nothing
+    Wait(sleep)
+  end
+
+  SetLocationBlip()
+  RegisterEntranceTarget()
+
+  if Config.UseTarget then
+    if not Config.DrawPackageLocationBlip then
+      return
     end
 
-    SetLocationBlip()
-    RegisterEntranceTarget()
+    while true do
+      sleep = 500
 
-    if Config.UseTarget then
-      if not Config.DrawPackageLocationBlip then
-        return
+      if onDuty and packageCoords and not carryPackage then
+        sleep = 0
+        DrawPackageLocationBlip()
       end
 
-      while true do
-        sleep = 500
+      Wait(sleep)
+    end
+  else
+    while true do
+      sleep = 500
+      
+      if isInsideEntranceZone then
+        sleep = 0
+        if IsControlJustReleased(0, 38) then
+          exports['qb-core']:KeyPressed()
+          Wait(500)
+          TriggerEvent('qb-recyclejob:client:target:enterLocation')
+          exports['qb-core']:HideText()
+        end
+      end
+      
+      if isInsideExitZone then
+        sleep = 0
+        if IsControlJustReleased(0, 38) then
+          exports['qb-core']:KeyPressed()
+          Wait(500)
+          TriggerEvent('qb-recyclejob:client:target:exitLocation')
+          exports['qb-core']:HideText()
+        end
+      end
 
-        if onDuty and packageCoords and not carryPackage then
+      if isInsideDutyZone then
+        sleep = 0
+        if IsControlJustReleased(0, 38) then
+          exports['qb-core']:KeyPressed()
+          Wait(500)
+          TriggerEvent('qb-recyclejob:client:target:toggleDuty')
+          exports['qb-core']:HideText()
+        end
+      end
+
+      if onDuty then
+        if isInsidePickupZone and not carryPackage then
+          sleep = 0
+          if IsControlJustReleased(0, 38) then
+            exports['qb-core']:KeyPressed()
+            Wait(500)
+            TriggerEvent('qb-recyclejob:client:target:pickupPackage')
+            exports['qb-core']:HideText()
+          end
+        elseif packageCoords and not carryPackage then
           sleep = 0
           DrawPackageLocationBlip()
         end
 
-        Wait(sleep)
+        if isInsideDeliveryZone and carryPackage then
+          sleep = 0
+          if IsControlJustReleased(0, 38) then
+            exports['qb-core']:KeyPressed()
+            Wait(500)
+            TriggerEvent('qb-recyclejob:client:target:dropPackage')
+            exports['qb-core']:HideText()
+          end
+        end
       end
-    else
-      while true do
-        sleep = 500
-       
-        if isInsideEntranceZone then
-          sleep = 0
-          if IsControlJustReleased(0, 38) then
-            TriggerEvent('qb-recyclejob:client:target:enterLocation')
-            exports['qb-core']:HideText()
-          end
-        end
-       
-        if isInsideExitZone then
-          sleep = 0
-          if IsControlJustReleased(0, 38) then
-            TriggerEvent('qb-recyclejob:client:target:exitLocation')
-            exports['qb-core']:HideText()
-          end
-        end
-
-        if isInsideDutyZone then
-          sleep = 0
-          if IsControlJustReleased(0, 38) then
-            TriggerEvent('qb-recyclejob:client:target:toggleDuty')
-            exports['qb-core']:HideText()
-          end
-        end
-
-        if onDuty then
-          if isInsidePickupZone and not carryPackage then
-            sleep = 0
-            if IsControlJustReleased(0, 38) then
-              TriggerEvent('qb-recyclejob:client:target:pickupPackage')
-              exports['qb-core']:HideText()
-            end
-          elseif packageCoords and not carryPackage then
-            sleep = 0
-            DrawPackageLocationBlip()
-          end
-
-          if isInsideDeliveryZone and carryPackage then
-            sleep = 0
-            if IsControlJustReleased(0, 38) then
-              TriggerEvent('qb-recyclejob:client:target:dropPackage')
-              exports['qb-core']:HideText()
-            end
-          end
-        end
-       
-        Wait(sleep)
-      end
+      
+      Wait(sleep)
     end
   end
-)
+end)
