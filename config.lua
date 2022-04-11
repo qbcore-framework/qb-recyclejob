@@ -1,4 +1,7 @@
 Config = {
+	disableJumpingWithBox = false, -- if true it will Ragdolls the player if they decide to jump with the box
+	disableRunningWithBox = false, -- if true it will Ragdolls the player if they decide to Run with the box
+	
 	OutsideLocation 	= vector4(55.55, 6472.18, 31.43, 44.0),
 	InsideLocation 		= vector4(1073.0, -3102.49, -39.0, 266.61),
 	DutyLocation 		= vector4(1048.7, -3100.62, -38.2, 88.02),
