@@ -1,8 +1,23 @@
 Config = {
+	-- **** IMPORTANT ****
+	-- UseTarget should only be set to true when using qb-target
+	UseTarget = GetConvar('UseTarget', 'false') == 'true',
+
 	OutsideLocation 	= vector4(55.55, 6472.18, 31.43, 44.0),
 	InsideLocation 		= vector4(1073.0, -3102.49, -39.0, 266.61),
 	DutyLocation 		= vector4(1048.7, -3100.62, -38.2, 88.02),
 	DropLocation 		= vector4(1048.224, -3097.071, -38.999, 274.810),
+
+	DrawPackageLocationBlip = true,
+
+	PickupActionDuration 	= math.random(4000, 6000),
+	DeliveryActionDuration 	= 5000,
+
+	MaxItemsReceived 	= 5,
+	MinItemReceivedQty 	= 2,
+	MaxItemReceivedQty 	= 6,
+	ChanceItem 			= "cryptostick",
+	LuckyItem 			= "rubber",
 	
 	PickupLocations = {
 		[1] 	= vector4(1067.68, -3095.57, -39.9, 342.39),
@@ -47,10 +62,5 @@ Config = {
 		[5] = "aluminum",
 		[6] = "steel",
 		[7] = "glass",
-	},
-	MaxItemsReceived = 5,
-	MinItemReceivedQty = 2,
-	MaxItemReceivedQty = 6,
-	ChanceItem = "cryptostick",
-	LuckyItem = "rubber"
+	}
 }
