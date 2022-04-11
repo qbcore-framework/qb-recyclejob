@@ -538,7 +538,6 @@ CreateThread(function()
 
     while true do
       sleep = 500
-
       if onDuty and packageCoords and not carryPackage then
         sleep = 0
         DrawPackageLocationBlip()
@@ -549,7 +548,25 @@ CreateThread(function()
   else
     while true do
       sleep = 500
-      
+      local ped = PlayerPedId()
+        if Config.disableJumpingWithBox and carryPackage and IsPedJumping(ped) then
+            SetPedToRagdoll(ped, 1500, 1500, 3, 0, 0, 0)
+            Wait(2000)
+            RequestAnimDict('anim@heists@box_carry@')
+            while (not HasAnimDictLoaded('anim@heists@box_carry@')) do
+                Wait(7)
+            end
+            TaskPlayAnim(PlayerPedId(), 'anim@heists@box_carry@', 'idle', 5.0, -1, -1, 50, 0, false, false, false)
+        end
+        if Config.disableRunningWithBox and carryPackage and IsPedRunning(ped) then
+            SetPedToRagdoll(ped, 1500, 1500, 3, 0, 0, 0)
+            Wait(1500)
+            RequestAnimDict('anim@heists@box_carry@')
+            while (not HasAnimDictLoaded('anim@heists@box_carry@')) do
+                Wait(7)
+            end
+            TaskPlayAnim(PlayerPedId(), 'anim@heists@box_carry@', 'idle', 5.0, -1, -1, 50, 0, false, false, false)
+        end
       if isInsideEntranceZone then
         sleep = 0
         if IsControlJustReleased(0, 38) then
@@ -563,10 +580,14 @@ CreateThread(function()
       if isInsideExitZone then
         sleep = 0
         if IsControlJustReleased(0, 38) then
-          exports['qb-core']:KeyPressed()
-          Wait(500)
-          TriggerEvent('qb-recyclejob:client:target:exitLocation')
-          exports['qb-core']:HideText()
+          if not Config.canLeaveWhileOnDuty and onDuty then
+            QBCore.Functions.Notify('Please go clock off before leaving', 'error')
+          else
+            exports['qb-core']:KeyPressed()
+            Wait(500)
+            TriggerEvent('qb-recyclejob:client:target:exitLocation')
+            exports['qb-core']:HideText()
+          end
         end
       end
 
