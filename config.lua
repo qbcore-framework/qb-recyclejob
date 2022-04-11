@@ -3,9 +3,9 @@ Config = {
 	-- UseTarget should only be set to true when using qb-target
 	UseTarget = GetConvar('UseTarget', 'true') == 'true',
 
-	disableJumpingWithBox = false,
-	disableRunningWithBox = false,
-	canLeaveWhileOnDuty = false,
+	disableJumpingWithBox = false, -- If true the player will fall over (ragdoll) if they jump while holding a package
+	disableRunningWithBox = false, -- If true the player will fall over (ragdoll) if they try to run while holding a package
+	canLeaveWhileOnDuty = false, -- If false the player must clock of duty in order to leave the warehouse
 
 	OutsideLocation 	= vector4(55.55, 6472.18, 31.43, 44.0),
 	InsideLocation 		= vector4(1073.0, -3102.49, -39.0, 266.61),
