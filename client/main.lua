@@ -140,13 +140,7 @@ local function DestroyExitTarget()
 end
 
 local function GetDutyTargetText()
-  local text = nil
-  if onDuty then
-    text = '[E] Clock Out'
-  else
-    text = '[E] Clock In'
-  end
-
+  local text = onDuty and '[E] Clock Out' or '[E] Clock In'
   return text
 end
 
