@@ -141,10 +141,6 @@ end
 
 local function GetDutyTargetText()
   local text = onDuty and '[E] Clock Out' or '[E] Clock In'
-  if onDuty then
-    text = '[E] Clock Out'
-  end
-
   return text
 end
 
