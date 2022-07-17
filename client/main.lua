@@ -473,6 +473,7 @@ RegisterNetEvent('qb-recyclejob:client:target:pickupPackage', function()
     return
   end
 
+    ScrapAnim()
   QBCore.Functions.Progressbar('pickup_reycle_package', 'Picking up the package', Config.PickupActionDuration, false, true, {
       disableMovement = true,
       disableCarMovement = true,
