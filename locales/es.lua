@@ -2,7 +2,7 @@ local Translations = {
     success = {
         you_have_been_clocked_in = "Has registrado la entrada",
     },
-    text = {       
+    text = {
         point_enter_warehouse = "[E] Entrar al almacén",
         enter_warehouse= "Entrar al almacén",
         exit_warehouse= "Salir del almacén",
