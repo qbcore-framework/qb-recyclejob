@@ -57,7 +57,7 @@ local function RegisterEntranceTarget()
         {
           type = 'client',
           event = 'qb-recyclejob:client:target:enterLocation',
-          label = 'Enter Warehouse',
+          label = Lang:t("text.enter_warehouse"),
         },
       },
       distance = 1.0
@@ -73,7 +73,7 @@ local function RegisterEntranceTarget()
 
     entranceZone:onPlayerInOut(function(isPointInside)
       if isPointInside then
-        exports['qb-core']:DrawText('[E] Enter Warehouse', 'left')
+        exports['qb-core']:DrawText(Lang:t("text.point_enter_warehouse"), 'left')
       else
         exports['qb-core']:HideText()
       end
@@ -98,7 +98,7 @@ local function RegisterExitTarget()
         {
           type = 'client',
           event = 'qb-recyclejob:client:target:exitLocation',
-          label = 'Exit Warehouse',
+          label = Lang:t("text.exit_warehouse"),
         },
       },
       distance = 1.0
@@ -114,7 +114,7 @@ local function RegisterExitTarget()
 
     exitZone:onPlayerInOut(function(isPointInside)
       if isPointInside then
-        exports['qb-core']:DrawText('[E] Exit Warehouse', 'left')
+        exports['qb-core']:DrawText(Lang:t("text.point_exit_warehouse"), 'left')
       else
         exports['qb-core']:HideText()
       end
@@ -140,7 +140,7 @@ local function DestroyExitTarget()
 end
 
 local function GetDutyTargetText()
-  local text = onDuty and '[E] Clock Out' or '[E] Clock In'
+  local text = onDuty and Lang:t("text.clock_out") or Lang:t("text.clock_in")
   return text
 end
 
@@ -221,7 +221,7 @@ local function RegisterDeliveyTarget()
         {
           type = 'client',
           event = 'qb-recyclejob:client:target:dropPackage',
-          label = 'Hand In Package',
+          label = Lang:t("text.hand_in_package"),
         },
       },
       distance = 1.0
@@ -237,7 +237,7 @@ local function RegisterDeliveyTarget()
   
     deliveryZone:onPlayerInOut(function(isPointInside)
       if isPointInside and carryPackage then
-        exports['qb-core']:DrawText('[E] Hand In Package', 'left')
+        exports['qb-core']:DrawText(Lang:t("text.point_hand_in_package"), 'left')
       else
         exports['qb-core']:HideText()
       end
@@ -402,7 +402,7 @@ function RegisterPickupTarget(coords)
         {
           type = 'client',
           event = 'qb-recyclejob:client:target:pickupPackage',
-          label = 'Get Package',
+          label = Lang:t("text.get_package"),
         },
       },
       distance = 1.0
@@ -418,7 +418,7 @@ function RegisterPickupTarget(coords)
 
     pickupZone:onPlayerInOut(function(isPointInside)
       if isPointInside then
-        exports['qb-core']:DrawText('[E] Get Package', 'left')
+        exports['qb-core']:DrawText( Lang:t("text.point_get_package"), 'left')
       else
         exports['qb-core']:HideText()
       end
@@ -449,10 +449,10 @@ end)
 RegisterNetEvent('qb-recyclejob:client:target:toggleDuty', function()
   onDuty = not onDuty
   if onDuty then
-    QBCore.Functions.Notify('You Have Been Clocked In', 'success')
+    QBCore.Functions.Notify(Lang:t("success.you_have_been_clocked_in"), 'success')
     GetRandomPackage()
   else
-    QBCore.Functions.Notify('You Have Clocked Out', 'error')
+    QBCore.Functions.Notify(Lang:t("error.you_have_clocked_out"), 'error')
     DestroyPickupTarget()
   end
 
@@ -473,7 +473,7 @@ RegisterNetEvent('qb-recyclejob:client:target:pickupPackage', function()
     return
   end
 
-  QBCore.Functions.Progressbar('pickup_reycle_package', 'Picking up the package', Config.PickupActionDuration, false, true, {
+  QBCore.Functions.Progressbar('pickup_reycle_package', Lang:t("text.picking_up_the_package"), Config.PickupActionDuration, false, true, {
       disableMovement = true,
       disableCarMovement = true,
       disableMouse = false,
@@ -499,7 +499,7 @@ RegisterNetEvent('qb-recyclejob:client:target:dropPackage', function()
   DropPackage()
   ScrapAnim()
   DestroyDeliveryTarget()
-  QBCore.Functions.Progressbar('deliver_reycle_package', 'Unpacking the package', Config.DeliveryActionDuration, false, true, {
+  QBCore.Functions.Progressbar('deliver_reycle_package',  Lang:t("text.unpacking_the_package"), Config.DeliveryActionDuration, false, true, {
       disableMovement = true,
       disableCarMovement = true,
       disableMouse = false,
