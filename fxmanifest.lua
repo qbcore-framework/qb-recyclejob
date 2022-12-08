@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 description 'QB-RecycleJob'
-version '2.1.0'
+version '2.2.0'
 
 shared_scripts {
   '@qb-core/shared/locale.lua',
