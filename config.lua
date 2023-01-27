@@ -3,7 +3,7 @@ Config = {
 	-- UseTarget should only be set to true when using qb-target
 	UseTarget = GetConvar('UseTarget', 'false') == 'true',
 
-	OutsideLocation 	= vector4(55.55, 6472.18, 31.43, 44.0),
+	OutsideLocation 	= vector4(746.45, -1399.54, 26.61, 1.33),
 	InsideLocation 		= vector4(1073.0, -3102.49, -39.0, 266.61),
 	DutyLocation 		= vector4(1048.7, -3100.62, -38.2, 88.02),
 	DropLocation 		= vector4(1048.224, -3097.071, -38.999, 274.810),
@@ -16,8 +16,7 @@ Config = {
 	MaxItemsReceived 	= 5,
 	MinItemReceivedQty 	= 2,
 	MaxItemReceivedQty 	= 6,
-	ChanceItem 			= "cryptostick",
-	LuckyItem 			= "rubber",
+	ChanceItem 			= "laptop",
 	
 	PickupLocations = {
 		[1] 	= vector4(1067.68, -3095.57, -39.9, 342.39),
@@ -55,12 +54,60 @@ Config = {
 	},
 	PickupBoxModel = "prop_cs_cardbox_01",
 	ItemTable = {
-		[1] = "metalscrap",
-		[2] = "plastic",
-		[3] = "copper",
-		[4] = "iron",
-		[5] = "aluminum",
-		[6] = "steel",
-		[7] = "glass",
+		[1] = "recycledmaterials",
 	}
 }
+
+-----------------------------------------------
+-----------------------------------------------
+
+--Progress Bar Time -- 
+
+Config.PickupTime = 5000
+Config.TurnInTime = 5000
+Config.TradeTime = 6000   -- How long it takes to trade in materials
+
+-----------------------------------------------
+-----------------------------------------------
+
+-- These values determine the amount you get back per recycledmaterials
+-- Ex: 1 Recycled Material = 5 Metal Scrap, and so on...
+-- You can also turn them in for quick cash per recycledmaterials
+
+Config.ItemPrices = {
+	["metalscrap"] = {
+		price = 5
+	},
+
+	["iron"] = {
+		price = 5
+	},
+
+	["steel"] = {
+		price = 5
+	},
+
+	["aluminum"] = {
+		price = 5
+	},
+
+	["copper"] = {
+		price = 5
+	},
+
+	["plastic"] = {
+		price = 5
+	},
+
+	["glass"] = {
+		price = 5
+	},
+
+	["rubber"] = {
+		price = 5
+	},
+	["cash"] = {
+		price = 5
+	},
+}
+

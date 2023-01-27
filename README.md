@@ -18,3 +18,19 @@ Recycling Job For QB-Core
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>
+
+
+Add this item to your shared items
+['recycledmaterials'] 			 = {['name'] = 'recycledmaterials', 			['label'] = 'Recycled Materials', 		['weight'] = 500, 		['type'] = 'item', 		['image'] = 'recycledmaterials.png', 	['unique'] = false, 	['useable'] = false, 	['shouldClose'] = false,   ['combinable'] = nil,   ['description'] = 'Look at you, saving the earth!'},
+
+Add this wherever you spawn your peds
+
+  { -- RECYCLING CENTER PED
+      model = 's_m_y_xmech_02',
+      coords = vector4(-572.4, -1632.1, 18.41, 168.63),
+      gender = 'male',
+      scenario = 'WORLD_HUMAN_CLIPBOARD',
+      freeze = true,
+      invincible = true,
+      blockevents = true
+  },
