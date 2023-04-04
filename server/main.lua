@@ -4,7 +4,7 @@ RegisterNetEvent('qb-recycle:server:getItem', function()
     local src = source
     local player = QBCore.Functions.GetPlayer(src)
 
-    for i = 1, math.random(1, Config.MaxItemsReceived) do
+    for _ = 1, math.random(1, Config.MaxItemsReceived) do
         local randItem = Config.ItemTable[math.random(#Config.ItemTable)]
         local amount = math.random(Config.MinItemReceivedQty, Config.MaxItemReceivedQty)
         player.Functions.AddItem(randItem, amount)
