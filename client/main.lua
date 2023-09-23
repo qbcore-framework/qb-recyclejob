@@ -31,7 +31,7 @@ local function DestroyPickupTarget()
   if not pickupZone then
     return
   end
-  
+
   if Config.UseTarget then
     exports['qb-target']:RemoveZone(pickupTargetID)
     pickupZone = nil
@@ -85,7 +85,7 @@ end
 
 local function RegisterExitTarget()
   local coords = vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z)
-    
+
   if Config.UseTarget then
     exitZone = exports['qb-target']:AddBoxZone(exitTargetID, coords, 1, 4, {
       name = exitTargetID,
@@ -146,7 +146,7 @@ end
 
 local function RegisterDutyTarget()
   local coords = vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z)
-  
+
   if Config.UseTarget then
     dutyZone = exports['qb-target']:AddBoxZone(dutyTargetID, coords, 1, 1, {
       name = dutyTargetID,
@@ -172,7 +172,7 @@ local function RegisterDutyTarget()
       maxZ = Config.DutyLocation.z + 1.0,
       debugPoly = false
     })
-  
+
     dutyZone:onPlayerInOut(function(isPointInside)
       if isPointInside then
         exports['qb-core']:DrawText(GetDutyTargetText(), 'left')
@@ -234,7 +234,7 @@ local function RegisterDeliveyTarget()
       maxZ = Config.DropLocation.z + 1.0,
       debugPoly = false
     })
-  
+
     deliveryZone:onPlayerInOut(function(isPointInside)
       if isPointInside and carryPackage then
         exports['qb-core']:DrawText(Lang:t("text.point_hand_in_package"), 'left')
@@ -281,7 +281,7 @@ local function ScrapAnim()
   loadAnimDict('mp_car_bomb')
   TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, false, false, false)
   local openingDoor = true
-  
+
   CreateThread(function()
     while openingDoor do
       TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, 0, 0, 0)
@@ -330,7 +330,7 @@ local function SetLocationBlip()
   SetBlipScale(RecycleBlip, 0.8)
   SetBlipAsShortRange(RecycleBlip, true)
   BeginTextCommandSetBlipName('STRING')
-  AddTextComponentString('Recycle Center')
+  AddTextComponentSubstringPlayerName('Recycle Center')
   EndTextCommandSetBlipName(RecycleBlip)
 end
 
@@ -543,7 +543,7 @@ CreateThread(function()
   else
     while true do
       sleep = 500
-      
+
       if isInsideEntranceZone then
         sleep = 0
         if IsControlJustReleased(0, 38) then
@@ -553,7 +553,7 @@ CreateThread(function()
           exports['qb-core']:HideText()
         end
       end
-      
+
       if isInsideExitZone then
         sleep = 0
         if IsControlJustReleased(0, 38) then
@@ -598,7 +598,7 @@ CreateThread(function()
           end
         end
       end
-      
+
       Wait(sleep)
     end
   end
