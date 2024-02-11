@@ -1,7 +1,8 @@
 fx_version 'cerulean'
 game 'gta5'
-
-description 'QB-RecycleJob'
+lua54 'yes'
+author 'Kakarot'
+description 'Allows players to work in the recycling plant for money'
 version '2.2.0'
 
 shared_scripts {
@@ -19,5 +20,3 @@ client_script {
 }
 
 server_script 'server/main.lua'
-
-lua54 'yes'
