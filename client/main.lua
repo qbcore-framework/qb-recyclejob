@@ -543,8 +543,12 @@ CreateThread(function()
   else
     while true do
       sleep = 500
+      local pos = GetEntityCoords(PlayerPedId(), true)
 
-      if isInsideEntranceZone then
+      if #(pos - vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z)) < 1.3 then
+        isInsideEntranceZone = true
+      end
+      if isInsideEntranceZone == true then
         sleep = 0
         if IsControlJustReleased(0, 38) then
           exports['qb-core']:KeyPressed()
@@ -554,7 +558,10 @@ CreateThread(function()
         end
       end
 
-      if isInsideExitZone then
+      if #(pos - vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z)) < 1.3 then
+        isInsideExitZone = true
+      end
+      if isInsideExitZone == true then
         sleep = 0
         if IsControlJustReleased(0, 38) then
           exports['qb-core']:KeyPressed()
@@ -564,7 +571,10 @@ CreateThread(function()
         end
       end
 
-      if isInsideDutyZone then
+      if #(pos - vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z)) < 1.3 then
+        isInsideDutyZone = true
+      end
+      if isInsideDutyZone == true then
         sleep = 0
         if IsControlJustReleased(0, 38) then
           exports['qb-core']:KeyPressed()
