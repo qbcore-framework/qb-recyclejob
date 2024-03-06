@@ -5,6 +5,10 @@ local QBCore = exports['qb-core']:GetCoreObject()
 RegisterNetEvent('qb-recycle:server:getItem', function()
   local src = source
   local Player = QBCore.Functions.GetPlayer(src)
+  local ped = GetPlayerPed(src)
+  local dist = vector3(Config.DropLocation.x,Config.DropLocation.y,Config.DropLocation.z) - GetEntityCoords(ped)
+  if #dist > 10.0 then return DropPlayer(src, 'Attempted exploit abuse') end
+  
   for _ = 1, math.random(1, Config.MaxItemsReceived), 1 do
     local randItem = Config.ItemTable[math.random(1, #Config.ItemTable)]
     local amount = math.random(Config.MinItemReceivedQty, Config.MaxItemReceivedQty)
