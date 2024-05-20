@@ -507,7 +507,7 @@ RegisterNetEvent('qb-recyclejob:client:target:dropPackage', function()
     }, {}, {}, {}, function()
         -- Done
         StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
-        TriggerServerEvent('qb-recycle:server:getItem')
+        TriggerServerEvent('qb-recyclejob:server:getItem')
         GetRandomPackage()
     end)
 end)
