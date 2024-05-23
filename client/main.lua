@@ -262,7 +262,7 @@ local function DestroyDeliveryTarget()
     end
 end
 
-local function DestoryInsideZones()
+local function DestroyInsideZones()
     DestroyPickupTarget()
     DestroyExitTarget()
     DestroyDutyTarget()
@@ -361,7 +361,7 @@ local function EnterLocation()
     isInsideDutyZone = false
     isInsideEntranceZone = false
 
-    DestoryInsideZones()
+    DestroyInsideZones()
     RegisterExitTarget()
     RegisterDutyTarget()
 end
@@ -380,7 +380,7 @@ local function ExitLocation()
     isInsideDutyZone = false
     isInsideEntranceZone = false
 
-    DestoryInsideZones()
+    DestroyInsideZones()
 
     if carryPackage then
         DropPackage()
@@ -437,6 +437,10 @@ local function DrawPackageLocationBlip()
 end
 
 -- Events
+
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    RegisterExitTarget()
+end)
 
 RegisterNetEvent('qb-recyclejob:client:target:enterLocation', function()
     EnterLocation()
