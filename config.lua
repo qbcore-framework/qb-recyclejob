@@ -13,12 +13,6 @@ Config = {
 	PickupActionDuration    = math.random(4000, 6000),
 	DeliveryActionDuration  = 5000,
 
-	MaxItemsReceived        = 5,
-	MinItemReceivedQty      = 2,
-	MaxItemReceivedQty      = 6,
-	ChanceItem              = 'cryptostick',
-	LuckyItem               = 'rubber',
-
 	PickupLocations         = {
 		[1]  = vector4(1067.68, -3095.57, -39.9, 342.39),
 		[2]  = vector4(1065.20, -3095.57, -39.9, 342.39),
@@ -54,13 +48,4 @@ Config = {
 		[7] = 'prop_boxpile_08a',
 	},
 	PickupBoxModel          = 'prop_cs_cardbox_01',
-	ItemTable               = {
-		[1] = 'metalscrap',
-		[2] = 'plastic',
-		[3] = 'copper',
-		[4] = 'iron',
-		[5] = 'aluminum',
-		[6] = 'steel',
-		[7] = 'glass',
-	}
 }
