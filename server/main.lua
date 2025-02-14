@@ -49,7 +49,7 @@ RegisterNetEvent('qb-recyclejob:server:getItem', function()
     local Player = QBCore.Functions.GetPlayer(src)
     if not isClose(src) then
         uhohs[src] = uhohs[src] + 1 or 0
-        if uhohs[src] > 3 then 
+        if uhohs[src] >= 3 then
             exploitBan(src, 'Exploiting distance on qb-recyclejob')
         end
         return
