@@ -146,7 +146,6 @@ end
 
 local function RegisterDutyTarget()
     local coords = vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z)
-
     if Config.UseTarget then
         dutyZone = exports['qb-target']:AddBoxZone(dutyTargetID, coords, 1, 1, {
             name = dutyTargetID,
@@ -526,6 +525,7 @@ local function sellMaterials()
                 menu[#menu+1] = {
                     header = QBCore.Shared.Items[k].label,
                     txt = 'Price: $'..v,
+                    icon = "nui://qb-inventory/html/images/" .. QBCore.Shared.Items[k].name .. ".png",
                     action = function()
                         local dialog = exports['qb-input']:ShowInput({
                             header = "Sell " .. QBCore.Shared.Items[k].label,
@@ -540,7 +540,7 @@ local function sellMaterials()
                             }
                         })
                         if not dialog and dialog.amount then return end
-                        TriggerServerEvent('qb-recyclejob:server:sellItem', k, dialog.amount)
+                        TriggerServerEvent('qb-recyclejob:server:sellItem', k, tonumber(dialog.amount))
                     end
                 }
             end
@@ -556,7 +556,7 @@ CreateThread(function()
             Wait(0)
         end
         local loc = Config.SellPed
-        local ped = CreatePed(4, GetHashKey('mp_m_freemode_01'), loc.x, loc.y, loc.z, 180.0, false, false)
+        local ped = CreatePed(4, GetHashKey('mp_m_freemode_01'), loc.x, loc.y, loc.z, loc.w, false, false)
         FreezeEntityPosition(ped, true)
         SetEntityInvincible(ped, true)
         SetBlockingOfNonTemporaryEvents(ped, true)
@@ -565,7 +565,7 @@ CreateThread(function()
                 options = {
                     {
                         icon = 'fas fa-dollar-sign',
-                        label = Lang:t('text.sell_materials'),
+                        label = 'Sell Materials',
                         action = function()
                             sellMaterials()
                         end

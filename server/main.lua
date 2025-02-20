@@ -69,7 +69,7 @@ local function isClose(source, loc)
         distance = #(playerCoords - vector3(dropLocation.x, dropLocation.y, dropLocation.z))
     elseif loc == 'sell' then
         distance = #(playerCoords - vector3(salesLoc.x, salesLoc.y, salesLoc.z))
-    else 
+    else
         return false
     end
 
@@ -84,25 +84,12 @@ local function isClose(source, loc)
     end
 end
 
-
-CreateThread(function() -- debug thread 
-    while true do
-        Wait(5000)
-        for k, v in pairs (Stock) do 
-            print('item: ' .. k .. ' stock: ' .. v)
-        end
-        for k, v in pairs (Sales) do 
-            print('item: ' .. k .. ' price: ' .. v)
-        end
-    end
-end)
-
 QBCore.Functions.CreateCallback('qb-recyclejob:server:getPriceList', function(source, cb)
-    local src = source 
-    local Player = QBCore.Functions.GetPlayer(src)
+    local src = source
     if not isClose(src, 'sell') then return false end
     cb(Sales)
 end)
+
 local function adjustStock(item, change, amount)
     if not Config.LimitedMaterials then return end
     if change == 'add' then
@@ -121,11 +108,15 @@ local function checkStock(source, item, amount)
         return false
     end
 end
+
 local function sellMaterials(src, item, amount)
     local Player = QBCore.Functions.GetPlayer(src)
     local price = Sales[item] * amount
-
-    if Player.Functions.RemoveItem(item, amount) then 
+    local has = Player.Functions.GetItemByName(item)
+    if has and has.amount < amount then
+        amount = has.amount
+    end
+    if Player.Functions.RemoveItem(item, amount) then
         Player.Functions.AddMoney('cash', price)
         TriggerClientEvent('QBCore:Notify', src, 'You sold ' .. amount .. ' ' .. QBCore.Shared.Items[item].label .. ' for $' .. price, 'success')
         adjustStock(item, 'add', amount)
@@ -133,10 +124,7 @@ local function sellMaterials(src, item, amount)
         TriggerClientEvent('QBCore:Notify', src, 'You do not have enough ' .. QBCore.Shared.Items[item].label .. ' to sell', 'error')
         return
     end
-    
-    
 end
-
 
 local function getItem(source, item, amount)
     local Player = QBCore.Functions.GetPlayer(source)
@@ -150,11 +138,13 @@ local function getItem(source, item, amount)
         TriggerClientEvent('qb-inventory:client:ItemBox', source, QBCore.Shared.Items[item], 'add', amount)
     end
 end
+
 RegisterNetEvent('qb-recyclejob:server:getItem', function()
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    if not isClose(src) then
-        uhohs[src] = uhohs[src] + 1 or 0
+    if not isClose(src, 'turnIn') then
+        if not uhohs[src] then uhohs[src] = 1 return end
+        uhohs[src] = uhohs[src] + 1 or 1
         if uhohs[src] >= 3 then
             exploitBan(src, 'Exploiting distance on qb-recyclejob')
         end
