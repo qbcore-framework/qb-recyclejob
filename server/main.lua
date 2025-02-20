@@ -15,6 +15,32 @@ local maxRecieved = 5 -- Max items to be received
 local dropLocation = vector4(1048.224, -3097.071, -38.999, 274.810)
 local LuckyItemChance = 20 -- 20% chance to get a lucky item
 local uhohs = {}
+local Sales, Stock, salesLoc = {}, {}, Config.SellPed
+if Config.SellMaterials then 
+    Sales = { -- key is item, value is price
+        metalscrap = 2,
+        plastic = 2,
+        copper = 2,
+        rubber = 2,
+        iron = 2,
+        aluminum = 2,
+        steel = 2,
+        glass = 2,
+    }
+end
+if Config.LimitedMaterials then 
+    Stock = { -- key is item, value is stock at restart
+        metalscrap = 3000,
+        plastic = 3000,
+        copper = 3000,
+        rubber = 3000,
+        iron = 3000,
+        aluminum = 3000,
+        steel = 3000,
+        glass = 3000,
+    }
+end
+
 
 local function exploitBan(id, reason)
     MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -32,41 +58,126 @@ local function exploitBan(id, reason)
     DropPlayer(id, 'You were permanently banned by the server for: Exploiting')
 end
 
-local function isClose(source)
+local function isClose(source, loc)
     local playerPed = GetPlayerPed(source)
+    local Player = QBCore.Functions.GetPlayer(source)
+    local cid = Player.PlayerData.citizenid
     local playerCoords = GetEntityCoords(playerPed)
-    local distance = #(playerCoords - vector3(dropLocation.x, dropLocation.y, dropLocation.z))
+    local distance = nil
+
+    if loc == 'turnIn' then
+        distance = #(playerCoords - vector3(dropLocation.x, dropLocation.y, dropLocation.z))
+    elseif loc == 'sell' then
+        distance = #(playerCoords - vector3(salesLoc.x, salesLoc.y, salesLoc.z))
+    else 
+        return false
+    end
 
     if distance < 5.0 then
         return true
     else
+        uhohs[cid] = uhohs[cid] + 1 or 0
+        if uhohs[cid] >= 3 then
+            exploitBan(source, 'Exploiting distance on qb-recyclejob')
+        end
         return false
     end
 end
 
+
+CreateThread(function() -- debug thread 
+    while true do
+        Wait(5000)
+        for k, v in pairs (Stock) do 
+            print('item: ' .. k .. ' stock: ' .. v)
+        end
+        for k, v in pairs (Sales) do 
+            print('item: ' .. k .. ' price: ' .. v)
+        end
+    end
+end)
+
+QBCore.Functions.CreateCallback('qb-recyclejob:server:getPriceList', function(source, cb)
+    local src = source 
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not isClose(src, 'sell') then return false end
+    cb(Sales)
+end)
+local function adjustStock(item, change, amount)
+    if not Config.LimitedMaterials then return end
+    if change == 'add' then
+        Stock[item] = Stock[item] + amount
+    elseif change == 'remove' then
+        Stock[item] = Stock[item] - amount
+    end
+end
+
+local function checkStock(source, item, amount)
+    if not Config.LimitedMaterials then return true end
+    if Stock[item] >= amount then
+        return true
+    else
+        TriggerClientEvent('QBCore:Notify', source, QBCore.Shared.Items[item].label .. ' Is Out Of Stock!', 'error')
+        return false
+    end
+end
+local function sellMaterials(src, item, amount)
+    local Player = QBCore.Functions.GetPlayer(src)
+    local price = Sales[item] * amount
+
+    if Player.Functions.RemoveItem(item, amount) then 
+        Player.Functions.AddMoney('cash', price)
+        TriggerClientEvent('QBCore:Notify', src, 'You sold ' .. amount .. ' ' .. QBCore.Shared.Items[item].label .. ' for $' .. price, 'success')
+        adjustStock(item, 'add', amount)
+    else
+        TriggerClientEvent('QBCore:Notify', src, 'You do not have enough ' .. QBCore.Shared.Items[item].label .. ' to sell', 'error')
+        return
+    end
+    
+    
+end
+
+
+local function getItem(source, item, amount)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if Config.LimitedMaterials then
+        if not checkStock(source, item, amount) then return end
+        Player.Functions.AddItem(item, amount)
+        TriggerClientEvent('qb-inventory:client:ItemBox', source, QBCore.Shared.Items[item], 'add', amount)
+        adjustStock(item, 'remove', amount)
+    else
+        Player.Functions.AddItem(item, amount)
+        TriggerClientEvent('qb-inventory:client:ItemBox', source, QBCore.Shared.Items[item], 'add', amount)
+    end
+end
 RegisterNetEvent('qb-recyclejob:server:getItem', function()
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    if not isClose(src) then
-        uhohs[src] = uhohs[src] + 1 or 0
-        if uhohs[src] >= 3 then
-            exploitBan(src, 'Exploiting distance on qb-recyclejob')
-        end
-        return
-    end
     local itemAmountRecieved = math.random(1, maxRecieved)
+
+    if not isClose(src, 'turnIn') then return end
+
     repeat
         Wait(1)
         local item = Recieve[math.random(1, #Recieve)]
         local itemAmount = math.random(item.min, item.max)
         itemAmountRecieved = itemAmountRecieved - 1
-        Player.Functions.AddItem(item.item, itemAmount)
-        TriggerClientEvent('qb-inventory:client:ItemBox', src, QBCore.Shared.Items[item.item], 'add', itemAmount)
+        getItem(src, item.item, itemAmount)
     until itemAmountRecieved == 0
 
     local luckyChance = math.random(1, 100)
     if luckyChance <= LuckyItemChance then 
         Player.Functions.AddItem(luckyItem, 1)
         TriggerClientEvent('qb-inventory:client:ItemBox', src, QBCore.Shared.Items[luckyItem], 'add', 1)
+    end
+end)
+
+RegisterNetEvent('qb-recyclejob:server:sellItem', function(item, amount)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not isClose(src, 'sell') then return end
+    if not Sales[item] then return end
+    if Config.SellMaterials then
+        sellMaterials(src, item, amount)
     end
 end)

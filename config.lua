@@ -7,7 +7,9 @@ Config = {
 	InsideLocation          = vector4(1073.0, -3102.49, -39.0, 266.61),
 	DutyLocation            = vector4(1048.7, -3100.62, -38.2, 88.02),
 	DropLocation            = vector4(1048.224, -3097.071, -38.999, 274.810),
-
+	SellMaterials = true, --  allow players to sell materials to a ped 
+	LimitedMaterials = true, -- limit the amount of materials that can be sold
+	SellPed = vector3(1048.224, -3097.071, -38.999),
 	DrawPackageLocationBlip = true,
 
 	PickupActionDuration    = math.random(4000, 6000),
