@@ -16,6 +16,8 @@ local dropLocation = vector4(1048.224, -3097.071, -38.999, 274.810)
 local LuckyItemChance = 20 -- 20% chance to get a lucky item
 local uhohs = {}
 local Sales, Stock, salesLoc = {}, {}, Config.SellPed
+
+
 if Config.SellMaterials then 
     Sales = { -- key is item, value is price
         metalscrap = 2,
@@ -104,7 +106,7 @@ local function checkStock(source, item, amount)
     if Stock[item] >= amount then
         return true
     else
-        TriggerClientEvent('QBCore:Notify', source, QBCore.Shared.Items[item].label .. ' Is Out Of Stock!', 'error')
+        TriggerClientEvent('QBCore:Notify', source, Lang:t('error.out_of_stock', {item = item}), 'error')
         return false
     end
 end
@@ -115,13 +117,14 @@ local function sellMaterials(src, item, amount)
     local has = Player.Functions.GetItemByName(item)
     if has and has.amount < amount then
         amount = has.amount
+        price = Sales[item] * amount
     end
     if Player.Functions.RemoveItem(item, amount) then
         Player.Functions.AddMoney('cash', price)
-        TriggerClientEvent('QBCore:Notify', src, 'You sold ' .. amount .. ' ' .. QBCore.Shared.Items[item].label .. ' for $' .. price, 'success')
+        TriggerClientEvent('QBCore:Notify', src, Lang:t('success.sold', {amount = amount, item = QBCore.Shared.Items[item].label, price = price}), 'success')
         adjustStock(item, 'add', amount)
     else
-        TriggerClientEvent('QBCore:Notify', src, 'You do not have enough ' .. QBCore.Shared.Items[item].label .. ' to sell', 'error')
+        TriggerClientEvent('QBCore:Notify', src, Lang:t('error.nothing_to_sell'), 'error')
         return
     end
 end
