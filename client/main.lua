@@ -191,7 +191,7 @@ local function sellMaterials()
     end)
 end
 
-local function CreateSales()
+local function Start()
     if Config.SellMaterials then 
         RequestModel(GetHashKey('s_m_m_dockwork_01'))
         while not HasModelLoaded(GetHashKey('s_m_m_dockwork_01')) do
@@ -234,10 +234,6 @@ local function CreateSales()
             end)
         end
     end
-end
-
-CreateThread(function()
-    CreateSales()
     for k, v in pairs (Config.PickupLocations) do
         RequestModel(Config.WarehouseObjects[v.model])
         while not HasModelLoaded(Config.WarehouseObjects[v.model]) do
@@ -494,4 +490,7 @@ CreateThread(function()
         Wait(100)
         end
     end
-end)
+end
+
+Wait(100)
+Start()
