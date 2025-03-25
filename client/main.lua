@@ -2,302 +2,41 @@ local QBCore = exports['qb-core']:GetCoreObject()
 local carryPackage = nil
 local packageCoords = nil
 local onDuty = false
+local isBusy = false
+local inZone = {
+    ['pickupTarget'] = false,
+    ['enterLocation'] = false,
+    ['exitLocation'] = false,
+    ['dutyLocation'] = false,
+    ['targetCrate'] = false,
+    ['turnIn'] = false,
+    ['sellPed'] = false,
+}
+local props = {}
 
--- zone check
-
-local entranceTargetID = 'entranceTarget'
-local isInsideEntranceZone = false
-local entranceZone = nil
-
-local exitTargetID = 'exitTarget'
-local isInsideExitZone = false
-local exitZone = nil
-
-local deliveryTargetID = 'deliveryTarget'
-local isInsideDeliveryZone = false
-local deliveryZone = nil
-
-local dutyTargetID = 'dutyTarget'
-local isInsideDutyZone = false
-local dutyZone = nil
-
-local pickupTargetID = 'pickupTarget'
-local isInsidePickupZone = false
-local pickupZone = nil
-
--- Functions
-
-local function DestroyPickupTarget()
-    if not pickupZone then
-        return
-    end
-
-    if Config.UseTarget then
-        exports['qb-target']:RemoveZone(pickupTargetID)
-        pickupZone = nil
-    else
-        pickupZone:destroy()
-        pickupZone = nil
-        isInsidePickupZone = false
-    end
-end
-
-local function RegisterEntranceTarget()
-    local coords = vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z)
-
-    if Config.UseTarget then
-        entranceZone = exports['qb-target']:AddBoxZone(entranceTargetID, coords, 1, 4, {
-            name = entranceTargetID,
-            heading = 44.0,
-            minZ = Config.OutsideLocation.z - 1.0,
-            maxZ = Config.OutsideLocation.z + 2.0,
-            debugPoly = false,
-        }, {
-            options = {
-                {
-                    type = 'client',
-                    event = 'qb-recyclejob:client:target:enterLocation',
-                    label = Lang:t('text.enter_warehouse'),
-                },
-            },
-            distance = 1.0
-        })
-    else
-        entranceZone = BoxZone:Create(coords, 1, 4, {
-            name = entranceTargetID,
-            heading = 44.0,
-            minZ = Config.OutsideLocation.z - 1.0,
-            maxZ = Config.OutsideLocation.z + 2.0,
-            debugPoly = false
-        })
-
-        entranceZone:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                exports['qb-core']:DrawText(Lang:t('text.point_enter_warehouse'), 'left')
-            else
-                exports['qb-core']:HideText()
-            end
-
-            isInsideEntranceZone = isPointInside
-        end)
-    end
-end
-
-local function RegisterExitTarget()
-    local coords = vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z)
-
-    if Config.UseTarget then
-        exitZone = exports['qb-target']:AddBoxZone(exitTargetID, coords, 1, 4, {
-            name = exitTargetID,
-            heading = 270,
-            minZ = Config.InsideLocation.z - 1.0,
-            maxZ = Config.InsideLocation.z + 2.0,
-            debugPoly = false,
-        }, {
-            options = {
-                {
-                    type = 'client',
-                    event = 'qb-recyclejob:client:target:exitLocation',
-                    label = Lang:t('text.exit_warehouse'),
-                },
-            },
-            distance = 1.0
-        })
-    else
-        exitZone = BoxZone:Create(coords, 1, 4, {
-            name = exitTargetID,
-            heading = 270,
-            minZ = Config.InsideLocation.z - 1.0,
-            maxZ = Config.InsideLocation.z + 2.0,
-            debugPoly = false
-        })
-
-        exitZone:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                exports['qb-core']:DrawText(Lang:t('text.point_exit_warehouse'), 'left')
-            else
-                exports['qb-core']:HideText()
-            end
-
-            isInsideExitZone = isPointInside
-        end)
-    end
-end
-
-local function DestroyExitTarget()
-    if not exitZone then
-        return
-    end
-
-    if Config.UseTarget then
-        exports['qb-target']:RemoveZone(exitTargetID)
-        exitZone = nil
-    else
-        exitZone:destroy()
-        exitZone = nil
-        isInsideExitZone = false
-    end
-end
-
-local function GetDutyTargetText()
-    local text = onDuty and Lang:t('text.clock_out') or Lang:t('text.clock_in')
-    return text
-end
-
-local function RegisterDutyTarget()
-    local coords = vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z)
-
-    if Config.UseTarget then
-        dutyZone = exports['qb-target']:AddBoxZone(dutyTargetID, coords, 1, 1, {
-            name = dutyTargetID,
-            heading = 270,
-            minZ = Config.DutyLocation.z - 2.0,
-            maxZ = Config.DutyLocation.z + 1.0,
-            debugPoly = false,
-        }, {
-            options = {
-                {
-                    type = 'client',
-                    event = 'qb-recyclejob:client:target:toggleDuty',
-                    label = GetDutyTargetText(),
-                },
-            },
-            distance = 1.0
-        })
-    else
-        dutyZone = BoxZone:Create(coords, 1, 1, {
-            name = dutyTargetID,
-            heading = 270,
-            minZ = Config.DutyLocation.z - 2.0,
-            maxZ = Config.DutyLocation.z + 1.0,
-            debugPoly = false
-        })
-
-        dutyZone:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                exports['qb-core']:DrawText(GetDutyTargetText(), 'left')
-            else
-                exports['qb-core']:HideText()
-            end
-
-            isInsideDutyZone = isPointInside
-        end)
-    end
-end
-
-local function DestroyDutyTarget()
-    if not dutyZone then
-        return
-    end
-
-    if Config.UseTarget then
-        exports['qb-target']:RemoveZone(dutyTargetID)
-        dutyZone = nil
-    else
-        dutyZone:destroy()
-        dutyZone = nil
-        isInsideDutyZone = false
-    end
-end
-
-local function RefreshDutyTarget()
-    DestroyDutyTarget()
-    RegisterDutyTarget()
-end
-
-
-local function RegisterDeliveyTarget()
-    local coords = vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z)
-
-    if Config.UseTarget then
-        deliveryZone = exports['qb-target']:AddBoxZone(deliveryTargetID, coords, 1, 1, {
-            name = deliveryTargetID,
-            heading = 270,
-            minZ = Config.DropLocation.z - 2.0,
-            maxZ = Config.DropLocation.z + 1.0,
-            debugPoly = false,
-        }, {
-            options = {
-                {
-                    type = 'client',
-                    event = 'qb-recyclejob:client:target:dropPackage',
-                    label = Lang:t('text.hand_in_package'),
-                },
-            },
-            distance = 1.0
-        })
-    else
-        deliveryZone = BoxZone:Create(coords, 1, 1, {
-            name = deliveryTargetID,
-            heading = 270,
-            minZ = Config.DropLocation.z - 2.0,
-            maxZ = Config.DropLocation.z + 1.0,
-            debugPoly = false
-        })
-
-        deliveryZone:onPlayerInOut(function(isPointInside)
-            if isPointInside and carryPackage then
-                exports['qb-core']:DrawText(Lang:t('text.point_hand_in_package'), 'left')
-            else
-                exports['qb-core']:HideText()
-            end
-
-            isInsideDeliveryZone = isPointInside
-        end)
-    end
-end
-
-local function DestroyDeliveryTarget()
-    if not deliveryZone then
-        return
-    end
-
-    if Config.UseTarget then
-        exports['qb-target']:RemoveZone(deliveryTargetID)
-        deliveryZone = nil
-    else
-        deliveryZone:destroy()
-        deliveryZone = nil
-        isInsideDeliveryZone = false
-    end
-end
-
-local function DestroyInsideZones()
-    DestroyPickupTarget()
-    DestroyExitTarget()
-    DestroyDutyTarget()
-    DestroyDeliveryTarget()
-end
-
-local function loadAnimDict(dict)
-    while (not HasAnimDictLoaded(dict)) do
-        RequestAnimDict(dict)
-        Wait(5)
-    end
-end
-
-local function ScrapAnim()
-    local time = 5
-    loadAnimDict('mp_car_bomb')
-    TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, false, false, false)
-    local openingDoor = true
-
-    CreateThread(function()
-        while openingDoor do
-            TaskPlayAnim(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 3.0, 3.0, -1, 16, 0, 0, 0, 0)
-            Wait(1000)
-            time = time - 1
-            if time <= 0 then
-                openingDoor = false
-                StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
-            end
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName == GetCurrentResourceName() then
+        for k, v in pairs (props) do
+            DeleteObject(v)
         end
-    end)
+        if carryPackage then
+            DeleteObject(carryPackage)
+        end
+        if packageCoords then
+            SetEntityDrawOutline(props[packageCoords], false)
+        end
+    end
+end)
+
+local function DrawPackageLocationBlip()
+    if not Config.DrawPackageLocationBlip then return end
+    SetEntityDrawOutline(props[packageCoords], true)
+    SetEntityDrawOutlineColor(props[packageCoords], 15,20,60)
 end
 
 local function GetRandomPackage()
-    packageCoords = Config.PickupLocations[math.random(1, #Config.PickupLocations)]
-    RegisterPickupTarget(packageCoords)
+    packageCoords = math.random(1, #Config.PickupLocations)
+    DrawPackageLocationBlip()
 end
 
 local function PickupPackage()
@@ -315,6 +54,7 @@ local function PickupPackage()
     AttachEntityToEntity(object, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.05, 0.1, -0.3, 300.0, 250.0, 20.0, true, true, false, true, 1, true)
     carryPackage = object
 end
+
 
 local function DropPackage()
     ClearPedTasks(PlayerPedId())
@@ -334,18 +74,7 @@ local function SetLocationBlip()
     EndTextCommandSetBlipName(RecycleBlip)
 end
 
-local function buildInteriorDesign()
-    for _, pickuploc in pairs(Config.PickupLocations) do
-        local model = GetHashKey(Config.WarehouseObjects[math.random(1, #Config.WarehouseObjects)])
-        RequestModel(model)
-        while not HasModelLoaded(model) do
-            Wait(0)
-        end
-        local obj = CreateObject(model, pickuploc.x, pickuploc.y, pickuploc.z, false, true, true)
-        PlaceObjectOnGroundProperly(obj)
-        FreezeEntityPosition(obj, true)
-    end
-end
+SetLocationBlip()
 
 local function EnterLocation()
     DoScreenFadeOut(500)
@@ -353,17 +82,7 @@ local function EnterLocation()
         Wait(10)
     end
     SetEntityCoords(PlayerPedId(), Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z)
-    buildInteriorDesign()
     DoScreenFadeIn(500)
-
-    isInsidePickupZone = false
-    isInsideExitZone = false
-    isInsideDutyZone = false
-    isInsideEntranceZone = false
-
-    DestroyInsideZones()
-    RegisterExitTarget()
-    RegisterDutyTarget()
 end
 
 local function ExitLocation()
@@ -375,235 +94,403 @@ local function ExitLocation()
     DoScreenFadeIn(500)
 
     onDuty = false
-    isInsidePickupZone = false
-    isInsideExitZone = false
-    isInsideDutyZone = false
-    isInsideEntranceZone = false
-
-    DestroyInsideZones()
 
     if carryPackage then
         DropPackage()
     end
 end
 
-function RegisterPickupTarget(coords)
-    local targetCoords = vector3(coords.x, coords.y, coords.z)
-
-    if Config.UseTarget then
-        pickupZone = exports['qb-target']:AddBoxZone(pickupTargetID, targetCoords, 4, 1.5, {
-            name = pickupTargetID,
-            heading = coords.h,
-            minZ = coords.z - 1.0,
-            maxZ = coords.z + 2.0,
-            debugPoly = false,
-        }, {
-            options = {
-                {
-                    type = 'client',
-                    event = 'qb-recyclejob:client:target:pickupPackage',
-                    label = Lang:t('text.get_package'),
-                },
-            },
-            distance = 1.0
-        })
-    else
-        pickupZone = BoxZone:Create(targetCoords, 4, 1.5, {
-            name = pickupTargetID,
-            heading = coords.h,
-            minZ = coords.z - 1.0,
-            maxZ = coords.z + 2.0,
-            debugPoly = false
-        })
-
-        pickupZone:onPlayerInOut(function(isPointInside)
-            if isPointInside then
-                exports['qb-core']:DrawText(Lang:t('text.point_get_package'), 'left')
-            else
-                exports['qb-core']:HideText()
-            end
-
-            isInsidePickupZone = isPointInside
-        end)
-    end
-end
-
-local function DrawPackageLocationBlip()
-    if not Config.DrawPackageLocationBlip then
-        return
-    end
-
-    DrawMarker(2, packageCoords.x, packageCoords.y, packageCoords.z + 3, 0, 0, 0, 180.0, 0, 0, 0.5, 0.5, 0.5, 255, 255, 0, 100, false, false, 2, true, nil, nil, false)
-end
-
--- Events
-
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    RegisterExitTarget()
-end)
-
-RegisterNetEvent('qb-recyclejob:client:target:enterLocation', function()
-    EnterLocation()
-end)
-
-RegisterNetEvent('qb-recyclejob:client:target:exitLocation', function()
-    ExitLocation()
-end)
-
-RegisterNetEvent('qb-recyclejob:client:target:toggleDuty', function()
-    onDuty = not onDuty
+local function toggleDuty()
     if onDuty then
-        QBCore.Functions.Notify(Lang:t('success.you_have_been_clocked_in'), 'success')
-        GetRandomPackage()
+        QBCore.Functions.Notify(Lang:t('text.clock_out'), 'success')
+        onDuty = false
+        if packageCoords then
+            SetEntityDrawOutline(props[packageCoords], false)
+            packageCoords = nil
+        end
     else
-        QBCore.Functions.Notify(Lang:t('error.you_have_clocked_out'), 'error')
-        DestroyPickupTarget()
+        QBCore.Functions.Notify(Lang:t('text.clock_in'), 'success')
+        onDuty = true
+        GetRandomPackage()
     end
+end
 
-    if carryPackage then
-        DropPackage()
-    end
-
-    RefreshDutyTarget()
-    DestroyDeliveryTarget()
-end)
-
-RegisterNetEvent('qb-recyclejob:client:target:pickupPackage', function()
-    if not pickupZone or carryPackage then
-        return
-    end
-
-    if not Config.UseTarget and not isInsidePickupZone then
-        return
-    end
-
+local function pickUp()
+    isBusy = true
     QBCore.Functions.Progressbar('pickup_reycle_package', Lang:t('text.picking_up_the_package'), Config.PickupActionDuration, false, true, {
         disableMovement = true,
         disableCarMovement = true,
         disableMouse = false,
         disableCombat = true
-    }, {}, {}, {}, function()
+    }, {
+        animDict = 'mp_car_bomb',
+        anim = 'car_bomb_mechanic',
+        flags = 16
+    }, {}, {}, function()
+        isBusy = false
+        SetEntityDrawOutline(props[packageCoords], false)
         packageCoords = nil
-        ClearPedTasks(PlayerPedId())
         PickupPackage()
-        DestroyPickupTarget()
-        RegisterDeliveyTarget()
+    end, function()
+        isBusy = false
     end)
-end)
 
-RegisterNetEvent('qb-recyclejob:client:target:dropPackage', function()
-    if not carryPackage or not deliveryZone then
-        return
-    end
+end
 
-    if not Config.UseTarget and not isInsideDeliveryZone then
-        return
-    end
-
+local function handInPackage()
     DropPackage()
-    ScrapAnim()
-    DestroyDeliveryTarget()
     QBCore.Functions.Progressbar('deliver_reycle_package', Lang:t('text.unpacking_the_package'), Config.DeliveryActionDuration, false, true, {
         disableMovement = true,
         disableCarMovement = true,
         disableMouse = false,
         disableCombat = true
-    }, {}, {}, {}, function()
-        -- Done
-        StopAnimTask(PlayerPedId(), 'mp_car_bomb', 'car_bomb_mechanic', 1.0)
+    }, {
+        animDict = 'mp_car_bomb',
+        anim = 'car_bomb_mechanic',
+        flags = 16
+    }, {}, {}, function()
         TriggerServerEvent('qb-recyclejob:server:getItem')
         GetRandomPackage()
     end)
-end)
+end
 
--- Threads
-
-CreateThread(function()
-    local sleep = 500
-
-    while not LocalPlayer.state.isLoggedIn do
-        -- do nothing
-        Wait(sleep)
-    end
-
-    SetLocationBlip()
-    RegisterEntranceTarget()
-
-    if Config.UseTarget then
-        if not Config.DrawPackageLocationBlip then
+local function sellMaterials()
+    QBCore.Functions.TriggerCallback('qb-recyclejob:server:getPriceList', function(data)
+        local menu = {}
+        if data == false then QBCore.Functions.Notify(Lang:t('error.too_far_to_sell') 'error') return end
+        for k, v in pairs (data) do
+            if QBCore.Functions.HasItem(k) then
+                menu[#menu+1] = {
+                    header = QBCore.Shared.Items[k].label,
+                    txt = Lang:t('text.price', {price = v}),
+                    icon = "nui://qb-inventory/html/images/" .. QBCore.Shared.Items[k].name .. ".png",
+                    action = function()
+                        local dialog = exports['qb-input']:ShowInput({
+                            header = Lang:t('text.sell') .. ' ' ..  QBCore.Shared.Items[k].label,
+                            submitText = Lang:t('text.sell') ,
+                            inputs = {
+                                {
+                                    text = Lang:t('text.amount'),
+                                    header = Lang:t('text.amount'),
+                                    type = "number",
+                                    name = "amount",
+                                },
+                            }
+                        })
+                        if not dialog and dialog.amount then return end
+                        TriggerServerEvent('qb-recyclejob:server:sellItem', k, tonumber(dialog.amount))
+                    end
+                }
+            end
+        end
+        if #menu == 0 then
+            QBCore.Functions.Notify(Lang:t('error.nothing_to_sell'), 'error')
             return
         end
+        exports['qb-menu']:openMenu(menu)
+    end)
+end
 
-        while true do
-            sleep = 500
-
-            if onDuty and packageCoords and not carryPackage then
-                sleep = 0
-                DrawPackageLocationBlip()
-            end
-
-            Wait(sleep)
+local function Start()
+    if Config.SellMaterials then 
+        RequestModel(GetHashKey('s_m_m_dockwork_01'))
+        while not HasModelLoaded(GetHashKey('s_m_m_dockwork_01')) do
+            Wait(0)
         end
-    else
-        while true do
-            sleep = 500
-
-            if isInsideEntranceZone then
-                sleep = 0
-                if IsControlJustReleased(0, 38) then
-                    exports['qb-core']:KeyPressed()
-                    Wait(500)
-                    TriggerEvent('qb-recyclejob:client:target:enterLocation')
+        local loc = Config.SellPed
+        local ped = CreatePed(4, GetHashKey('s_m_m_dockwork_01'), loc.x, loc.y, loc.z, loc.w, false, false)
+        FreezeEntityPosition(ped, true)
+        SetEntityInvincible(ped, true)
+        SetBlockingOfNonTemporaryEvents(ped, true)
+        if Config.UseTarget then 
+            exports['qb-target']:AddTargetEntity(ped, {
+                options = {
+                    {
+                        icon = 'fas fa-dollar-sign',
+                        label = Lang:t('text.sell_materials'),
+                        action = function()
+                            sellMaterials()
+                        end
+                    },
+                },
+                distance = 1.5
+            })
+        else
+           local sellZone = BoxZone:Create(vector3(loc.x, loc.y, loc.z), 2.0, 1.5, {
+                name = 'sellPed',
+                heading = 180.0,
+                minZ = loc.z - 1.0,
+                maxZ = loc.z + 2.0,
+                debugPoly = false
+            })
+            sellZone:onPlayerInOut(function(isPointInside)
+                if isPointInside then
+                    inZone['sellPed'] = true
+                    exports['qb-core']:DrawText(Lang:t('text.point_sell_materials'), 'left')
+                else
+                    inZone['sellPed'] = false
                     exports['qb-core']:HideText()
                 end
-            end
-
-            if isInsideExitZone then
-                sleep = 0
-                if IsControlJustReleased(0, 38) then
-                    exports['qb-core']:KeyPressed()
-                    Wait(500)
-                    TriggerEvent('qb-recyclejob:client:target:exitLocation')
-                    exports['qb-core']:HideText()
-                end
-            end
-
-            if isInsideDutyZone then
-                sleep = 0
-                if IsControlJustReleased(0, 38) then
-                    exports['qb-core']:KeyPressed()
-                    Wait(500)
-                    TriggerEvent('qb-recyclejob:client:target:toggleDuty')
-                    exports['qb-core']:HideText()
-                end
-            end
-
-            if onDuty then
-                if isInsidePickupZone and not carryPackage then
-                    sleep = 0
-                    if IsControlJustReleased(0, 38) then
-                        exports['qb-core']:KeyPressed()
-                        Wait(500)
-                        TriggerEvent('qb-recyclejob:client:target:pickupPackage')
-                        exports['qb-core']:HideText()
-                    end
-                elseif packageCoords and not carryPackage then
-                    sleep = 0
-                    DrawPackageLocationBlip()
-                end
-
-                if isInsideDeliveryZone and carryPackage then
-                    sleep = 0
-                    if IsControlJustReleased(0, 38) then
-                        exports['qb-core']:KeyPressed()
-                        Wait(500)
-                        TriggerEvent('qb-recyclejob:client:target:dropPackage')
-                        exports['qb-core']:HideText()
-                    end
-                end
-            end
-
-            Wait(sleep)
+            end)
         end
     end
-end)
+    for k, v in pairs (Config.PickupLocations) do
+        RequestModel(Config.WarehouseObjects[v.model])
+        while not HasModelLoaded(Config.WarehouseObjects[v.model]) do
+            Wait(0)
+        end
+        props[k] = CreateObject(Config.WarehouseObjects[v.model], v.loc.x, v.loc.y, v.loc.z, false, true, true)
+        PlaceObjectOnGroundProperly(props[k])
+        FreezeEntityPosition(props[k], true)
+        if Config.UseTarget then 
+            exports['qb-target']:AddTargetEntity(props[k], {
+                options = {
+                    {
+                        type = 'client',
+                        label = Lang:t('text.get_package'),
+                        icon = 'fas fa-box',
+                        action = function()
+                            if not isBusy then 
+                                pickUp()
+                            end
+                        end,
+                        canInteract = function()
+                            if packageCoords == k then 
+                                if isBusy == false then 
+                                    return true
+                                end
+                            end
+                        end,
+                    },
+                },
+                distance = 1.5
+            })
+        else
+            local zones = {}
+            zones[k] = BoxZone:Create(v.loc, 4, 2.0, {
+                name = zones[k],
+                heading = v.loc.w + 20,
+                minZ = v.loc.z - 1.0,
+                maxZ = v.loc.z + 2.0,
+                debugPoly = false
+            })
+            zones[k]:onPlayerInOut(function(isPointInside)
+                if isPointInside then
+                    if k == packageCoords then
+                       inZone['targetCrate'] = true
+                        exports['qb-core']:DrawText(Lang:t('text.point_get_package'), 'left')
+                    end
+                else
+                    inZone['targetCrate'] = false
+                    exports['qb-core']:HideText()
+                end
+            end)
+        end
+    end
+    if Config.UseTarget then
+        exports['qb-target']:AddBoxZone('enterLocation', vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z), 4, 1.5, {
+            name = 'enterLocation',
+            heading = 44.0,
+            minZ = Config.OutsideLocation.z - 1.0,
+            maxZ = Config.OutsideLocation.z + 2.0,
+            debugPoly = false,
+        }, {
+            options = {
+                {
+                    type = 'client',
+                    label = Lang:t('text.enter_warehouse'),
+                    action = function()
+                        EnterLocation()
+                    end,
+                },
+            },
+            distance = 1.0
+        })
+        exports['qb-target']:AddBoxZone('exitLocation', vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z), 4, 1.5, {
+            name = 'exitLocation',
+            heading = 44.0,
+            minZ = Config.InsideLocation.z - 1.0,
+            maxZ = Config.InsideLocation.z + 2.0,
+            debugPoly = false,
+        }, {
+            options = {
+                {
+                    type = 'client',
+                    label = Lang:t('text.exit_warehouse'),
+                    action = function()
+                        ExitLocation()
+                    end,
+                },
+            },
+            distance = 1.0
+        })
+        exports['qb-target']:AddBoxZone('dutyLocation', vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z), 4, 1.5, {
+            name = 'dutyLocation',
+            heading = 44.0,
+            minZ = Config.DutyLocation.z - 1.0,
+            maxZ = Config.DutyLocation.z + 2.0,
+            debugPoly = false,
+        }, {
+            options = {
+                {
+                    type = 'client',
+                    label = Lang:t('text.toggle_duty'),
+                    action = function()
+                        toggleDuty()
+                    end,
+                },
+            },
+            distance = 1.0
+        })
+        exports['qb-target']:AddBoxZone('recycleDrop', vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z), 4, 1.5, {
+            name = 'recycleDrop',
+            heading = 44.0,
+            minZ = Config.DropLocation.z - 1.0,
+            maxZ = Config.DropLocation.z + 2.0,
+            debugPoly = false,
+        }, {
+            options = {
+                {
+                    type = 'client',
+                    label = Lang:t('text.hand_in_package'),
+                    action = function()
+                        handInPackage()
+                    end,
+                    canInteract = function()
+                        if carryPackage then
+                            return true
+                        end
+                    end,
+                },
+            },
+            distance = 1.5
+        })
+    else
+        local enterZone = BoxZone:Create(vector3(Config.OutsideLocation.x, Config.OutsideLocation.y, Config.OutsideLocation.z), 4, 1.5, {
+            name = 'enterLocation',
+            heading = 133.0,
+            minZ = Config.OutsideLocation.z - 1.0,
+            maxZ = Config.OutsideLocation.z + 2.0,
+            debugPoly = false
+        })
+        local exitZone = BoxZone:Create(vector3(Config.InsideLocation.x, Config.InsideLocation.y, Config.InsideLocation.z), 4, 1.5, {
+            name = 'exitLocation',
+            heading = 180.0,
+            minZ = Config.InsideLocation.z - 1.0,
+            maxZ = Config.InsideLocation.z + 2.0,
+            debugPoly = false
+        })
+        local dutyZone = BoxZone:Create(vector3(Config.DutyLocation.x, Config.DutyLocation.y, Config.DutyLocation.z-1), 2.0, 1.5, {
+            name = 'dutyLocation',
+            heading = 180.0,
+            minZ = Config.DutyLocation.z - 2.0,
+            maxZ = Config.DutyLocation.z + 1.0,
+            debugPoly = false
+        })
+        local turnIn = BoxZone:Create(vector3(Config.DropLocation.x, Config.DropLocation.y, Config.DropLocation.z), 2.0, 1.5, {
+            name = 'recycleDrop',
+            heading = 180.0,
+            minZ = Config.DropLocation.z - 1.0,
+            maxZ = Config.DropLocation.z + 2.0,
+            debugPoly = false
+        })
+        enterZone:onPlayerInOut(function(isPointInside)
+            if isPointInside then
+                exports['qb-core']:DrawText(Lang:t('text.point_enter_warehouse'), 'left')
+                inZone['enterLocation'] = isPointInside
+            else
+                exports['qb-core']:HideText()
+                inZone['enterLocation'] = isPointInside
+            end
+        end)
+        exitZone:onPlayerInOut(function(isPointInside)
+            if isPointInside then
+                exports['qb-core']:DrawText(Lang:t('text.point_exit_warehouse'), 'left')
+                inZone['exitLocation'] = isPointInside
+            else
+                exports['qb-core']:HideText()
+                inZone['exitLocation'] = isPointInside
+            end
+        end)
+        dutyZone:onPlayerInOut(function(isPointInside)
+            if isPointInside then
+                exports['qb-core']:DrawText(Lang:t('text.point_toggle_duty'), 'left')
+                inZone['dutyLocation'] = isPointInside
+            else
+                exports['qb-core']:HideText()
+                inZone['dutyLocation'] = isPointInside
+            end
+        end)
+        turnIn:onPlayerInOut(function(isPointInside)
+            if isPointInside then
+                if carryPackage then
+                    inZone['turnIn'] = isPointInside
+                    exports['qb-core']:DrawText(Lang:t('text.point_hand_in_package'), 'left')
+                end
+            else
+                exports['qb-core']:HideText()
+                inZone['turnIn'] = isPointInside
+            end
+        end)
+
+        while true do
+            if inZone['enterLocation'] then
+                repeat
+                    Wait(1)
+                until IsControlJustReleased(0, 38) or not inZone['enterLocation']
+                if inZone['enterLocation'] then
+                    EnterLocation()
+                end
+            end
+            if inZone['exitLocation'] then
+                repeat
+                    Wait(1)
+                until IsControlJustReleased(0, 38) or not inZone['exitLocation']
+                if inZone['exitLocation'] then
+                    ExitLocation()
+                end
+            end
+            if inZone['dutyLocation'] then
+                repeat
+                    Wait(1)
+                until IsControlJustReleased(0, 38) or not inZone['dutyLocation']
+                if inZone['dutyLocation'] then
+                    toggleDuty()
+                end
+            end
+            if inZone['targetCrate'] then
+                repeat
+                    Wait(1)
+                until IsControlJustReleased(0, 38) or not inZone['targetCrate']
+                exports['qb-core']:HideText()
+                if inZone['targetCrate'] then
+                    if not isBusy then 
+                        pickUp()
+                    end
+                end
+            end
+            if inZone['turnIn'] then
+                repeat
+                    Wait(1)
+                until IsControlJustReleased(0, 38) or not inZone['turnIn'] or not carryPackage
+                if inZone['turnIn'] then
+                    if carryPackage then
+                        handInPackage()
+                    end
+                end
+            end
+            if inZone['sellPed'] then 
+                repeat
+                    Wait(1)
+                until IsControlJustReleased(0, 38) or not inZone['sellPed']
+                if inZone['sellPed'] then
+                    sellMaterials()
+                end
+            end
+        Wait(100)
+        end
+    end
+end
+
+Wait(100)
+Start()
