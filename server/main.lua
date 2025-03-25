@@ -12,7 +12,7 @@ local Recieve = {
 }
 local luckyItem = 'cryptostick' -- Item to be given as a lucky item
 local maxRecieved = 5 -- Max items to be received
-local dropLocation = vector4(1048.224, -3097.071, -38.999, 274.810)
+local dropLocation = Config.dropLocation
 local LuckyItemChance = 20 -- 20% chance to get a lucky item
 local uhohs = {}
 local Sales, Stock, salesLoc = {}, {}, Config.SellPed
