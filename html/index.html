@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recycle Job Ranking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="ranking-container" class="hidden">
+        <div class="ranking-panel">
+            <div class="panel-header">
+                <div class="status-indicator"></div>
+                <span class="header-title">Recycle Job</span>
+            </div>
+
+            <div class="player-stats">
+                <div class="stat-row level-row">
+                    <span class="stat-label">Level</span>
+                    <span class="stat-value" id="player-level">1</span>
+                </div>
+                <div class="xp-bar-container">
+                    <div class="xp-bar" id="xp-bar"></div>
+                    <span class="xp-text" id="xp-text">0 / 100 XP</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Deliveries</span>
+                    <span class="stat-value" id="player-deliveries">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Your Rank</span>
+                    <span class="stat-value rank-value" id="player-rank">#0</span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="rankings-section">
+                <div class="rankings-header">Top Rankings</div>
+                <div class="rankings-list" id="rankings-list">
+                    <!-- Rankings will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <div class="xp-popup hidden" id="xp-popup">
+            <span class="xp-popup-text">+0 XP</span>
+        </div>
+
+        <div class="levelup-popup hidden" id="levelup-popup">
+            <div class="levelup-content">
+                <span class="levelup-title">LEVEL UP!</span>
+                <span class="levelup-level" id="levelup-level">Level 2</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
