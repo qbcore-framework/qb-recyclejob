@@ -7,13 +7,63 @@ Config = {
 	InsideLocation          = vector4(1073.0, -3102.49, -39.0, 266.61),
 	DutyLocation            = vector4(1048.7, -3100.62, -38.2, 88.02),
 	DropLocation            = vector4(1048.224, -3097.071, -38.999, 274.810),
-	SellMaterials = true, --  allow players to sell materials to a ped 
+	SellMaterials = true, --  allow players to sell materials to a ped
 	LimitedMaterials = true, -- limit the amount of materials that can be sold
 	SellPed 				= vector4(1049.84, -3094.08, -40.0, 178.84),
 	DrawPackageLocationBlip = true,
 
 	PickupActionDuration    = math.random(4000, 6000),
 	DeliveryActionDuration  = 5000,
+
+	-- Drop location zone size (increased for easier delivery)
+	DropZoneSize = {
+		length = 6.0,  -- Increased from 2.0
+		width = 4.0,   -- Increased from 1.5
+	},
+	DropDistanceCheck = 8.0, -- Server-side distance check (increased from 5.0)
+
+	-- ========================================
+	-- RANKING / LEVEL SYSTEM CONFIGURATION
+	-- ========================================
+	Ranking = {
+		Enabled = true,
+
+		-- Max level (practically unreachable by design)
+		MaxLevel = 999,
+
+		-- Base XP required for level 2
+		BaseXP = 100,
+
+		-- XP multiplier per level (exponential growth)
+		-- Level N requires: BaseXP * (XPMultiplier ^ (N-1)) * DifficultyScale
+		XPMultiplier = 1.15,
+
+		-- Difficulty scaling stops increasing after this level
+		-- This prevents XP requirements from becoming impossibly high
+		DifficultyCapLevel = 50,
+
+		-- XP earned per delivery
+		XPPerDelivery = {
+			min = 15,
+			max = 30,
+		},
+
+		-- Bonus XP for lucky item
+		LuckyItemBonusXP = 50,
+
+		-- Level rewards (optional money bonus per level up)
+		LevelUpReward = 100, -- Base reward for level up
+		LevelUpRewardMultiplier = 1.1, -- Multiplier per level
+
+		-- Top rankings to display in UI
+		TopRankingsCount = 10,
+
+		-- Cache update interval (seconds) - for server performance
+		RankingCacheInterval = 60,
+
+		-- Minimum time between ranking updates per player (seconds)
+		PlayerUpdateCooldown = 5,
+	},
 
 	PickupLocations         = {
 		{model = math.random(1,7), loc = vector4(1067.68, -3095.57, -39.9, 342.39),},

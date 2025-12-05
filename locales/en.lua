@@ -2,6 +2,8 @@ local Translations = {
     success = {
         you_have_been_clocked_in = "You Have Been Clocked In",
         sold = 'You Have Sold %{amount} %{item} For $%{price}',
+        xp_gained = '+%{xp} XP',
+        level_up = 'Level Up! You are now Level %{level}! Bonus: $%{reward}',
     },
     text = {
         point_enter_warehouse = "[E] Enter Warehouse",
