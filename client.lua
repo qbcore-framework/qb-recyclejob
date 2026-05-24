@@ -31,8 +31,10 @@ end)
 
 local function DrawPackageLocationBlip()
     if not Config.DrawPackageLocationBlip then return end
-    SetEntityDrawOutline(props[packageCoords], true)
-    SetEntityDrawOutlineColor(props[packageCoords], 15, 20, 60)
+    local ent = props[packageCoords]
+    SetEntityDrawOutline(ent, true)
+    SetEntityDrawOutlineColor(15, 20, 60, 1.0)
+    SetEntityDrawOutlineShader(0)
 end
 
 local function GetRandomPackage()
@@ -95,6 +97,10 @@ local function ExitLocation()
     DoScreenFadeIn(500)
 
     onDuty = false
+    if packageCoords then
+        SetEntityDrawOutline(props[packageCoords], false)
+        packageCoords = nil
+    end
 
     if carryPackage then
         DropPackage()
